@@ -1,0 +1,34 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>LED Wall Display</title><link rel="stylesheet" href="style.css">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body class="led">
+<main class="led-inner">
+  <div class="led-welcome">WELCOME</div>
+  <img id="photo" class="led-photo" alt="Participant">
+  <div id="name" class="led-name">READY TO SCAN</div>
+  <div id="info" class="led-info">Waiting for the next QR scan...</div>
+  <div id="message" class="led-message"></div>
+  <div class="led-footer">QR EVENT INFORMATION SYSTEM</div>
+</main>
+<script src="config.js"></script>
+<script>
+const db=supabase.createClient(window.SUPABASE_URL,window.SUPABASE_PUBLISHABLE_KEY);
+let lastScanId=null;
+async function poll(){
+ const {data,error}=await db.from("scan_history").select("id,scanned_at,participants(*)").order("id",{ascending:false}).limit(1).single();
+ if(error||!data||data.id===lastScanId)return;
+ lastScanId=data.id;
+ const p=data.participants;if(!p)return;
+ document.getElementById("photo").src=p.photo_url||"";
+ document.getElementById("name").textContent=p.name;
+ document.getElementById("info").textContent=[p.position,p.organization].filter(Boolean).join(" • ")||"Registered Participant";
+ document.getElementById("message").textContent=p.message||"";
+}
+poll();setInterval(poll,1000);
+</script>
+</body>
+</html>

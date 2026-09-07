@@ -1,0 +1,108 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Admin — QR Event System</title><link rel="stylesheet" href="style.css">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.4/build/qrcode.min.js"></script>
+</head>
+<body>
+<main class="wrap">
+  <div class="panel"><h1>👤 Participant Registration</h1><p class="muted">Create a participant, upload a picture, and generate a QR code.</p></div>
+
+  <section class="panel grid">
+    <form id="form">
+      <div class="field"><label for="qr">QR / Participant ID</label><input id="qr" placeholder="SM-2026-0001" required></div>
+      <div class="field"><label for="name">Full Name</label><input id="name" required></div>
+      <div class="field"><label for="position">Position</label><input id="position"></div>
+      <div class="field"><label for="org">Organization</label><input id="org"></div>
+      <div class="field"><label for="message">Message</label><textarea id="message">Welcome to the event!</textarea></div>
+      <div class="field"><label for="photo">Picture</label><input id="photo" type="file" accept="image/*"></div>
+      <img id="preview" class="photo-preview" alt="Photo preview">
+      <div class="actions">
+        <button class="primary" type="submit">SAVE PARTICIPANT</button>
+        <button type="button" id="reset">CLEAR FORM</button>
+      </div>
+      <div id="status" class="status">Ready.</div>
+    </form>
+
+    <div>
+      <h2>QR Code</h2>
+      <div id="qrBox" class="qr-box"><canvas id="qrCanvas" width="260" height="260"></canvas></div>
+      <p id="qrLabel" class="muted">Save a participant to generate the QR.</p>
+      <div class="actions">
+        <button id="downloadQR" type="button">DOWNLOAD QR</button>
+        <button id="printQR" type="button">PRINT QR</button>
+      </div>
+    </div>
+  </section>
+
+  <section class="panel">
+    <h2>Participants</h2>
+    <div class="table-wrap"><table><thead><tr><th>Photo</th><th>QR ID</th><th>Name</th><th>Position</th><th>Organization</th><th></th></tr></thead><tbody id="rows"></tbody></table></div>
+  </section>
+</main>
+
+<script src="config.js"></script>
+<script>
+const db = supabase.createClient(window.SUPABASE_URL, window.SUPABASE_PUBLISHABLE_KEY);
+const $=id=>document.getElementById(id);
+let currentId="", currentPhoto="";
+
+$("photo").addEventListener("change",()=>{
+  const f=$("photo").files[0];
+  if(f) $("preview").src=URL.createObjectURL(f);
+});
+function msg(t,ok=false){$("status").textContent=t;$("status").className="status "+(ok?"success":"error")}
+async function saveParticipant(e){
+  e.preventDefault();
+  const qr=$("qr").value.trim(), name=$("name").value.trim();
+  if(!qr||!name){msg("QR ID and name are required.");return}
+  msg("Saving...");
+  let photo_url=currentPhoto;
+  const file=$("photo").files[0];
+  if(file){
+    const ext=(file.name.split(".").pop()||"jpg").toLowerCase().replace(/[^a-z0-9]/g,"");
+    const path=qr+"-"+Date.now()+"."+ext;
+    const up=await db.storage.from("participant-photos").upload(path,file,{upsert:false});
+    if(up.error){msg("Photo upload failed: "+up.error.message);return}
+    photo_url=db.storage.from("participant-photos").getPublicUrl(path).data.publicUrl;
+  }
+  const row={qr_code:qr,name,position:$("position").value.trim(),organization:$("org").value.trim(),message:$("message").value.trim(),photo_url};
+  const {data,error}=await db.from("participants").upsert(row,{onConflict:"qr_code"}).select().single();
+  if(error){msg("Database error: "+error.message);return}
+  currentId=data.qr_code; currentPhoto=data.photo_url||"";
+  await makeQR(data.qr_code);
+  msg("Participant saved successfully.",true);
+  loadRows();
+}
+async function makeQR(value){
+  await QRCode.toCanvas($("qrCanvas"),value,{width:260,margin:2,errorCorrectionLevel:"M"});
+  $("qrLabel").textContent="QR ID: "+value;
+}
+$("form").addEventListener("submit",saveParticipant);
+$("reset").onclick=()=>{ $("form").reset();$("preview").removeAttribute("src");$("qrLabel").textContent="Save a participant to generate the QR."; currentId="" };
+$("downloadQR").onclick=()=>{
+  if(!currentId){alert("Save a participant first.");return}
+  const a=document.createElement("a");a.download=currentId+".png";a.href=$("qrCanvas").toDataURL("image/png");a.click();
+};
+$("printQR").onclick=()=>{
+  if(!currentId){alert("Save a participant first.");return}
+  const w=window.open("","_blank");w.document.write("<html><body style='text-align:center;font-family:Arial'><h2>"+currentId+"</h2><img src='"+$("qrCanvas").toDataURL("image/png")+"' style='width:300px'><p>Scan ID: "+currentId+"</p></body></html>");w.document.close();w.print();
+};
+async function loadRows(){
+  const {data,error}=await db.from("participants").select("*").order("created_at",{ascending:false}).limit(100);
+  if(error){$("rows").innerHTML="<tr><td colspan='6'>"+error.message+"</td></tr>";return}
+  $("rows").innerHTML=data.map(p=>`<tr><td>${p.photo_url?`<img class="thumb" src="${p.photo_url}" alt="">`:"—"}</td><td>${esc(p.qr_code)}</td><td>${esc(p.name)}</td><td>${esc(p.position||"")}</td><td>${esc(p.organization||"")}</td><td><button type="button" data-id="${esc(p.qr_code)}">LOAD</button></td></tr>`).join("");
+  document.querySelectorAll("[data-id]").forEach(b=>b.onclick=()=>loadOne(b.dataset.id));
+}
+async function loadOne(id){
+  const {data,error}=await db.from("participants").select("*").eq("qr_code",id).single();
+  if(error)return alert(error.message);
+  $("qr").value=data.qr_code;$("name").value=data.name;$("position").value=data.position||"";$("org").value=data.organization||"";$("message").value=data.message||"";currentPhoto=data.photo_url||"";if(data.photo_url)$("preview").src=data.photo_url;currentId=data.qr_code;makeQR(data.qr_code);
+}
+function esc(s){return String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]))}
+loadRows();
+</script>
+</body>
+</html>

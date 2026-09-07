@@ -1,67 +1,89 @@
-# QR LED Wall — Fixed Version
+# QR Event Information System v2
 
-## Why it did not work on the phone
+## Features
 
-If Chrome shows a URL beginning with `content://`, the HTML was opened as a local file/content document. Browser camera APIs generally require a **secure origin**.
+- Supabase PostgreSQL participant database
+- Participant photo upload/storage
+- QR ID generator
+- QR download and print
+- QR camera scanner
+- Automatic participant lookup
+- Scan history
+- Separate LED wall display page
+- Browser Text-to-Speech
+- GitHub Pages compatible
 
-Use one of these:
+## 1. Create the database
 
-- `https://your-domain.com`
-- `http://localhost:8080` on a computer
+Open Supabase SQL Editor and run `database.sql` in its entirety.
 
-Do NOT open `index.html` directly from Android Files/Downloads.
+The script creates:
 
-## Quick test on a computer
+- `participants`
+- `scan_history`
+- `participant-photos` Storage bucket
+- required Row Level Security policies
 
-1. Extract this folder.
-2. Open a terminal in the folder.
-3. Run:
+## 2. Configuration
 
-```bash
-python -m http.server 8080
-```
+`config.js` contains the Supabase project URL and browser publishable key.
 
-4. On the same computer open:
+The key supplied for this project is a publishable key. Never replace it with a `service_role` or `sb_secret_` key.
 
-```text
-http://localhost:8080
-```
+## 3. GitHub Pages
 
-5. Press START CAMERA and allow camera permission.
+Upload all files to the root of your existing `Announcement-Data` repository:
 
-## Phone testing
+- index.html
+- admin.html
+- scanner.html
+- display.html
+- config.js
+- style.css
+- database.sql
+- README.md
 
-For Android Chrome, deploy the folder to an HTTPS host such as GitHub Pages, Netlify, or Vercel. Then open the HTTPS address on the phone and allow camera access.
+GitHub Pages should use:
 
-## QR format
+Branch: `main`
+Folder: `/(root)`
 
-JSON is recommended:
+## 4. URLs
 
-```json
-{
-  "id": "SM-2026-001",
-  "name": "Juan Dela Cruz",
-  "position": "Guest",
-  "organization": "ABC Corporation",
-  "message": "Welcome to the event!"
-}
-```
+After GitHub Pages publishes:
 
-The scanner also accepts simple lines:
+- Home: `/`
+- Admin: `/admin.html`
+- Scanner: `/scanner.html`
+- LED Wall: `/display.html`
 
-```text
-ID: SM-2026-001
-Name: Juan Dela Cruz
-Position: Guest
-Organization: ABC Corporation
-Message: Welcome to the event!
-```
+Example:
 
-## Important architecture note
+https://YOUR-USERNAME.github.io/Announcement-Data/admin.html
 
-For an actual LED-wall event, the next version should use two pages:
+## 5. Test
 
-- `/scanner` — phone/laptop with camera
-- `/display` — computer connected to the LED wall
+1. Open Admin.
+2. Create a participant with QR ID `SM-2026-0001`.
+3. Select a participant photo.
+4. Save.
+5. Download/print the generated QR.
+6. Open Scanner on a phone and allow camera permission.
+7. Scan the QR.
+8. Open Display on the computer connected to the LED wall.
+9. The display polls the latest scan and updates automatically.
+10. TTS runs on the scanner device in this version.
 
-A small server/WebSocket connection will send each scan from the scanner to the LED-wall computer instantly. This also allows the TTS to play from the LED-wall computer's speakers.
+## Important security note
+
+This is configured as an event prototype without login so it is easy to deploy. Anyone who knows the public site can potentially read/modify participant records because the SQL policies permit anonymous access.
+
+Before using real sensitive participant information in production, add Supabase Authentication and restrict insert/update operations to authenticated admins. Do not expose secret/service-role keys in frontend code.
+
+## TTS and LED wall
+
+The current architecture is:
+
+Phone/laptop scanner -> Supabase -> LED display.
+
+The scanner speaks the result. If you want the LED-wall computer itself to speak, we can add a display-side TTS event/queue in the next version.

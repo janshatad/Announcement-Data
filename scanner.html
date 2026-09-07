@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>QR Scanner</title><link rel="stylesheet" href="style.css">
+<script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+<main class="wrap">
+  <section class="panel"><h1>📷 QR Scanner</h1><p id="status" class="status">Tap START CAMERA.</p><div id="reader"></div>
+  <div class="actions"><button class="primary" id="start">START CAMERA</button><button id="stop" disabled>STOP</button></div></section>
+  <section class="panel result-card">
+    <img id="photo" class="result-photo" alt="Participant photo">
+    <div><h1 id="name">READY TO SCAN</h1><h2 id="info">Scan a QR code.</h2><p id="message"></p></div>
+  </section>
+  <section class="panel"><h2>Last QR Data</h2><pre id="raw">None</pre></section>
+</main>
+<script src="config.js"></script>
+<script>
+const db=supabase.createClient(window.SUPABASE_URL,window.SUPABASE_PUBLISHABLE_KEY);
+const $=id=>document.getElementById(id);let scanner=null,running=false,last="",lastAt=0;
+async function start(){
+ if(running)return;
+ if(!window.isSecureContext){$("status").textContent="Camera requires HTTPS. Open the GitHub Pages HTTPS address.";return}
+ try{
+  scanner=new Html5Qrcode("reader");
+  await scanner.start({facingMode:"environment"},{fps:10,qrbox:{width:250,height:250}},onScan,()=>{});
+  running=true;$("start").disabled=true;$("stop").disabled=false;$("status").textContent="CAMERA ACTIVE — SCAN QR";
+ }catch(e){console.error(e);$("status").textContent="Camera failed. Allow camera permission and use HTTPS."}
+}
+async function stop(){if(!scanner||!running)return;try{await scanner.stop();await scanner.clear()}catch(e){}running=false;$("start").disabled=false;$("stop").disabled=true;$("status").textContent="Camera stopped."}
+async function onScan(text){
+ const now=Date.now();if(text===last&&now-lastAt<2500)return;last=text;lastAt=now;
+ $("raw").textContent=text;$("status").textContent="QR FOUND — LOOKING UP DATABASE...";
+ const {data,error}=await db.from("participants").select("*").eq("qr_code",text.trim()).single();
+ if(error){$("status").textContent="QR not found in database.";return}
+ $("photo").src=data.photo_url||"";
+ $("name").textContent=data.name;
+ $("info").textContent=[data.position,data.organization].filter(Boolean).join(" • ")||"Registered Participant";
+ $("message").textContent=data.message||"Welcome!";
+ await db.from("scan_history").insert({participant_id:data.id,scanner_name:"Main Scanner"});
+ speak(data);
+}
+function speak(p){if(!("speechSynthesis"in window))return;speechSynthesis.cancel();let a=[`Welcome, ${p.name}.`];if(p.position)a.push(`Position: ${p.position}.`);if(p.organization)a.push(`Organization: ${p.organization}.`);if(p.message)a.push(p.message);speechSynthesis.speak(new SpeechSynthesisUtterance(a.join(" ")))}
+$("start").onclick=start;$("stop").onclick=stop;
+</script>
+</body>
+</html>
