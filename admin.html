@@ -23,7 +23,7 @@
         <button class="primary" type="submit">SAVE PARTICIPANT</button>
         <button type="button" id="reset">CLEAR FORM</button>
       </div>
-      <div id="status" class="status">Ready.</div>
+      <div id="status" class="status">Ready.</div><div class="muted" style="margin-top:8px;font-size:.85rem">Storage bucket: <b>participant-photos</b> · If an upload fails, the page now shows the HTTP/network reason.</div>
     </form>
 
     <div>
@@ -54,27 +54,120 @@ $("photo").addEventListener("change",()=>{
   if(f) $("preview").src=URL.createObjectURL(f);
 });
 function msg(t,ok=false){$("status").textContent=t;$("status").className="status "+(ok?"success":"error")}
+async function uploadPhotoDirect(file, qr){
+  const ext=(file.name.split(".").pop()||"jpg").toLowerCase().replace(/[^a-z0-9]/g,"") || "jpg";
+  const safeQr=qr.replace(/[^a-zA-Z0-9_-]/g,"_");
+  const path=safeQr+"-"+Date.now()+"."+ext;
+  const endpoint=window.SUPABASE_URL.replace(/\\/$/,"")+
+    "/storage/v1/object/participant-photos/"+encodeURIComponent(path);
+
+  // Use the browser-safe publishable key for the Storage request.
+  // This avoids hiding the useful Storage error behind a generic SDK "Failed to fetch".
+  let response;
+  try{
+    response=await fetch(endpoint,{
+      method:"POST",
+      headers:{
+        "apikey":window.SUPABASE_PUBLISHABLE_KEY,
+        "Authorization":"Bearer "+window.SUPABASE_PUBLISHABLE_KEY,
+        "Content-Type":file.type || "application/octet-stream",
+        "x-upsert":"false",
+        "cache-control":"3600"
+      },
+      body:file
+    });
+  }catch(err){
+    throw new Error("Network/CORS error while contacting Supabase Storage. "+(err?.message||err));
+  }
+
+  let bodyText="";
+  try{ bodyText=await response.text(); }catch(_){}
+
+  if(!response.ok){
+    let detail=bodyText;
+    try{
+      const j=JSON.parse(bodyText);
+      detail=j.message || j.error || bodyText;
+    }catch(_){}
+    throw new Error("Storage HTTP "+response.status+": "+(detail||response.statusText||"Upload rejected"));
+  }
+
+  return db.storage.from("participant-photos").getPublicUrl(path).data.publicUrl;
+}
+
 async function saveParticipant(e){
   e.preventDefault();
   const qr=$("qr").value.trim(), name=$("name").value.trim();
   if(!qr||!name){msg("QR ID and name are required.");return}
-  msg("Saving...");
-  let photo_url=currentPhoto;
+
   const file=$("photo").files[0];
-  if(file){
-    const ext=(file.name.split(".").pop()||"jpg").toLowerCase().replace(/[^a-z0-9]/g,"");
-    const path=qr+"-"+Date.now()+"."+ext;
-    const up=await db.storage.from("participant-photos").upload(path,file,{upsert:false});
-    if(up.error){msg("Photo upload failed: "+up.error.message);return}
-    photo_url=db.storage.from("participant-photos").getPublicUrl(path).data.publicUrl;
+  let photo_url=currentPhoto;
+
+  try{
+    if(file){
+      msg("Uploading photo...");
+      photo_url=await uploadPhotoDirect(file,qr);
+      msg("Photo uploaded. Saving participant...");
+    }else{
+      msg("Saving participant...");
+    }
+
+    const row={
+      qr_code:qr,
+      name:name,
+      position:$("position").value.trim(),
+      organization:$("org").value.trim(),
+      message:$("message").value.trim(),
+      photo_url:photo_url || ""
+    };
+
+    // Direct REST request with a timeout and detailed error reporting.
+    // This avoids a browser request getting stuck indefinitely in supabase-js.
+    const endpoint=window.SUPABASE_URL.replace(/\/$/,"")+"/rest/v1/participants";
+    const controller=new AbortController();
+    const timer=setTimeout(()=>controller.abort(),15000);
+
+    let response;
+    try{
+      response=await fetch(endpoint,{
+        method:"POST",
+        headers:{
+          "apikey":window.SUPABASE_PUBLISHABLE_KEY,
+          "Authorization":"Bearer "+window.SUPABASE_PUBLISHABLE_KEY,
+          "Content-Type":"application/json",
+          "Prefer":"resolution=merge-duplicates,return=minimal"
+        },
+        body:JSON.stringify(row),
+        signal:controller.signal
+      });
+    }catch(err){
+      if(err && err.name==="AbortError"){
+        throw new Error("Database request timed out after 15 seconds. Check the participants table RLS policies and GitHub/Supabase connection.");
+      }
+      throw new Error("Database network/CORS error: "+(err?.message||err));
+    }finally{
+      clearTimeout(timer);
+    }
+
+    const bodyText=await response.text();
+    if(!response.ok){
+      let detail=bodyText;
+      try{
+        const j=JSON.parse(bodyText);
+        detail=j.message || j.details || j.hint || j.error || bodyText;
+      }catch(_){}
+      throw new Error("Database HTTP "+response.status+": "+(detail||response.statusText||"Save rejected"));
+    }
+
+    currentId=qr;
+    currentPhoto=photo_url || "";
+    await makeQR(qr);
+    msg("Participant saved successfully.",true);
+    loadRows();
+  }catch(err){
+    console.error("Participant save error:",err);
+    msg("SAVE FAILED: "+(err?.message||String(err)));
   }
-  const row={qr_code:qr,name,position:$("position").value.trim(),organization:$("org").value.trim(),message:$("message").value.trim(),photo_url};
-  const {data,error}=await db.from("participants").upsert(row,{onConflict:"qr_code"}).select().single();
-  if(error){msg("Database error: "+error.message);return}
-  currentId=data.qr_code; currentPhoto=data.photo_url||"";
-  await makeQR(data.qr_code);
-  msg("Participant saved successfully.",true);
-  loadRows();
 }
 async function makeQR(value){
   await QRCode.toCanvas($("qrCanvas"),value,{width:260,margin:2,errorCorrectionLevel:"M"});

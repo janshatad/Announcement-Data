@@ -87,3 +87,17 @@ The current architecture is:
 Phone/laptop scanner -> Supabase -> LED display.
 
 The scanner speaks the result. If you want the LED-wall computer itself to speak, we can add a display-side TTS event/queue in the next version.
+
+
+## v3 upload fix
+The Admin page now:
+- checks the Supabase database connection before saving;
+- uploads photos directly to the `participant-photos` Storage endpoint;
+- reports the HTTP status or network/CORS error instead of only showing `Failed to fetch`;
+- keeps the same QR, scanner, display, and TTS workflow.
+
+The Supabase URL and publishable key in `config.js` are the confirmed values for the current project.
+
+
+## v4 database save fix
+The Admin page now uses a direct Supabase REST request for participant saving, with a 15-second timeout and detailed HTTP/RLS error reporting. It does not wait for `.select().single()` after upsert, which prevents the Admin page from getting stuck on "Saving..." when the write succeeds but the response/query hangs.
