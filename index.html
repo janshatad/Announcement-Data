@@ -1,0 +1,178 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#050505">
+<title>QR LED Wall</title>
+<link rel="stylesheet" href="style.css">
+<script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+</head>
+<body>
+<div class="app">
+  <header>
+    <h1>QR LED WALL</h1>
+    <p id="status">Ready. Tap START CAMERA.</p>
+  </header>
+
+  <section class="scanner">
+    <div id="reader"></div>
+    <div class="buttons">
+      <button id="start">START CAMERA</button>
+      <button id="stop" disabled>STOP</button>
+      <button id="sample">TEST QR DATA</button>
+    </div>
+  </section>
+
+  <section class="led" aria-live="polite">
+    <div class="welcome">WELCOME</div>
+    <div id="name">READY TO SCAN</div>
+    <div id="info">Scan a QR code to display information.</div>
+    <div id="message"></div>
+  </section>
+
+  <section class="raw">
+    <h2>Last Scanned Data</h2>
+    <pre id="raw">No QR code scanned yet.</pre>
+    <button id="again">🔊 READ AGAIN</button>
+    <button id="clear">CLEAR</button>
+  </section>
+</div>
+
+<script>
+(() => {
+  let scanner = null;
+  let running = false;
+  let last = null;
+  let lastScan = "";
+  let lastScanTime = 0;
+
+  const $ = id => document.getElementById(id);
+  const status = $("status");
+
+  function parse(text) {
+    try {
+      const x = JSON.parse(text);
+      return {
+        name: x.name || x.fullName || "Guest",
+        position: x.position || "",
+        organization: x.organization || x.company || "",
+        message: x.message || "Thank you for joining us!"
+      };
+    } catch (_) {}
+
+    const x = {};
+    text.split(/\r?\n/).forEach(line => {
+      const i = line.indexOf(":");
+      if (i > 0) x[line.slice(0,i).trim().toLowerCase()] = line.slice(i+1).trim();
+    });
+    return {
+      name: x.name || x.fullname || "Guest",
+      position: x.position || "",
+      organization: x.organization || x.company || "",
+      message: x.message || "Thank you for joining us!"
+    };
+  }
+
+  function display(text) {
+    const p = parse(text);
+    last = p;
+    $("name").textContent = p.name;
+    $("info").textContent = [p.position, p.organization].filter(Boolean).join(" • ") || "Registered Guest";
+    $("message").textContent = p.message;
+    $("raw").textContent = text;
+    speak(p);
+  }
+
+  function speak(p) {
+    if (!("speechSynthesis" in window)) {
+      status.textContent = "Displayed successfully. TTS is not supported by this browser.";
+      return;
+    }
+    speechSynthesis.cancel();
+    const words = [`Welcome, ${p.name}.`];
+    if (p.position) words.push(`Position: ${p.position}.`);
+    if (p.organization) words.push(`Organization: ${p.organization}.`);
+    if (p.message) words.push(p.message);
+    const u = new SpeechSynthesisUtterance(words.join(" "));
+    u.rate = 0.9;
+    speechSynthesis.speak(u);
+  }
+
+  async function start() {
+    if (running) return;
+
+    if (!window.isSecureContext && location.hostname !== "localhost" && location.hostname !== "127.0.0.1") {
+      status.textContent = "Camera blocked: open this site using HTTPS or localhost, not a file/content URL.";
+      return;
+    }
+
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+      status.textContent = "This browser does not provide camera access.";
+      return;
+    }
+
+    try {
+      scanner = new Html5Qrcode("reader");
+      await scanner.start(
+        { facingMode: "environment" },
+        { fps: 10, qrbox: { width: 250, height: 250 } },
+        text => {
+          const now = Date.now();
+          if (text === lastScan && now - lastScanTime < 2500) return;
+          lastScan = text;
+          lastScanTime = now;
+          display(text);
+        },
+        () => {}
+      );
+
+      running = true;
+      $("start").disabled = true;
+      $("stop").disabled = false;
+      status.textContent = "CAMERA ACTIVE — POINT AT QR CODE";
+    } catch (e) {
+      console.error(e);
+      status.textContent = "Camera failed. Check browser camera permission and HTTPS.";
+    }
+  }
+
+  async function stop() {
+    if (!scanner || !running) return;
+    try {
+      await scanner.stop();
+      await scanner.clear();
+    } catch (_) {}
+    running = false;
+    $("start").disabled = false;
+    $("stop").disabled = true;
+    status.textContent = "Camera stopped.";
+  }
+
+  $("start").onclick = start;
+  $("stop").onclick = stop;
+
+  $("sample").onclick = () => {
+    display(JSON.stringify({
+      id: "SM-2026-001",
+      name: "Juan Dela Cruz",
+      position: "Guest",
+      organization: "ABC Corporation",
+      message: "Welcome to the event!"
+    }));
+  };
+
+  $("again").onclick = () => { if (last) speak(last); };
+
+  $("clear").onclick = () => {
+    speechSynthesis?.cancel();
+    $("name").textContent = "READY TO SCAN";
+    $("info").textContent = "Scan a QR code to display information.";
+    $("message").textContent = "";
+    $("raw").textContent = "No QR code scanned yet.";
+    last = null;
+  };
+})();
+</script>
+</body>
+</html>
