@@ -96,18 +96,28 @@ async function uploadPhotoDirect(file, qr){
 }
 
 async function saveParticipant(e){
-  e.preventDefault();
+  if(e && e.preventDefault) e.preventDefault();
+
+  const btn=$("saveBtn");
+  if(btn && btn.dataset.saving==="1") return;
+
   const qr=$("qr").value.trim(), name=$("name").value.trim();
   if(!qr||!name){msg("QR ID and name are required.");return}
 
   const file=$("photo").files[0];
   let photo_url=currentPhoto;
 
+  if(btn){
+    btn.dataset.saving="1";
+    btn.disabled=true;
+    btn.textContent="SAVING...";
+  }
+
   try{
     if(file){
-      msg("Uploading photo...");
+      msg("1/2 Uploading photo...");
       photo_url=await uploadPhotoDirect(file,qr);
-      msg("Photo uploaded. Saving participant...");
+      msg("2/2 Photo uploaded. Saving participant...");
     }else{
       msg("Saving participant...");
     }
@@ -121,8 +131,6 @@ async function saveParticipant(e){
       photo_url:photo_url || ""
     };
 
-    // Direct REST request with a timeout and detailed error reporting.
-    // This avoids a browser request getting stuck indefinitely in supabase-js.
     const endpoint=window.SUPABASE_URL.replace(/\/$/,"")+"/rest/v1/participants";
     const controller=new AbortController();
     const timer=setTimeout(()=>controller.abort(),15000);
@@ -141,9 +149,8 @@ async function saveParticipant(e){
         signal:controller.signal
       });
     }catch(err){
-      if(err && err.name==="AbortError"){
-        throw new Error("Database request timed out after 15 seconds. Check the participants table RLS policies and GitHub/Supabase connection.");
-      }
+      if(err?.name==="AbortError")
+        throw new Error("Database request timed out after 15 seconds.");
       throw new Error("Database network/CORS error: "+(err?.message||err));
     }finally{
       clearTimeout(timer);
@@ -154,27 +161,50 @@ async function saveParticipant(e){
       let detail=bodyText;
       try{
         const j=JSON.parse(bodyText);
-        detail=j.message || j.details || j.hint || j.error || bodyText;
+        detail=j.message||j.details||j.hint||j.error||bodyText;
       }catch(_){}
       throw new Error("Database HTTP "+response.status+": "+(detail||response.statusText||"Save rejected"));
     }
 
     currentId=qr;
-    currentPhoto=photo_url || "";
-    await makeQR(qr);
-    msg("Participant saved successfully.",true);
-    loadRows();
+    currentPhoto=photo_url||"";
+
+    // Show success immediately. QR generation cannot prevent the participant from being saved.
+    msg("✅ PARTICIPANT SAVED SUCCESSFULLY!",true);
+
+    try{
+      await makeQR(qr);
+    }catch(qrErr){
+      console.warn("QR generation error:",qrErr);
+    }
+
+    try{ await loadRows(); }catch(_){}
+
   }catch(err){
     console.error("Participant save error:",err);
-    msg("SAVE FAILED: "+(err?.message||String(err)));
+    msg("❌ SAVE FAILED: "+(err?.message||String(err)));
+  }finally{
+    if(btn){
+      btn.dataset.saving="0";
+      btn.disabled=false;
+      btn.textContent="SAVE PARTICIPANT";
+    }
   }
 }
 async function makeQR(value){
   await QRCode.toCanvas($("qrCanvas"),value,{width:260,margin:2,errorCorrectionLevel:"M"});
   $("qrLabel").textContent="QR ID: "+value;
 }
-$("form").addEventListener("submit",saveParticipant);
-$("reset").onclick=()=>{ $("form").reset();$("preview").removeAttribute("src");$("qrLabel").textContent="Save a participant to generate the QR."; currentId="" };
+$("saveBtn").addEventListener("click",()=>saveParticipant({preventDefault:()=>{}}));
+$("form").addEventListener("submit",(e)=>{e.preventDefault();saveParticipant(e);});
+$("reset").onclick=()=>{
+  $("form").reset();
+  $("preview").removeAttribute("src");
+  $("qrLabel").textContent="Save a participant to generate the QR.";
+  currentId="";
+  currentPhoto="";
+  msg("Form cleared.");
+};
 $("downloadQR").onclick=()=>{
   if(!currentId){alert("Save a participant first.");return}
   const a=document.createElement("a");a.download=currentId+".png";a.href=$("qrCanvas").toDataURL("image/png");a.click();

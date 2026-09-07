@@ -101,3 +101,7 @@ The Supabase URL and publishable key in `config.js` are the confirmed values for
 
 ## v4 database save fix
 The Admin page now uses a direct Supabase REST request for participant saving, with a 15-second timeout and detailed HTTP/RLS error reporting. It does not wait for `.select().single()` after upsert, which prevents the Admin page from getting stuck on "Saving..." when the write succeeds but the response/query hangs.
+
+
+## v5 form/save fix
+The Save button is now explicitly a non-submit button with a click handler. This prevents accidental Android/browser form navigation or reload. The form is never cleared after saving. The success message is displayed before QR generation, so QR rendering cannot hide a successful database save.
