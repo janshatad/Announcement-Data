@@ -20,7 +20,7 @@
       <div class="field"><label for="photo">Picture</label><input id="photo" type="file" accept="image/*"></div>
       <img id="preview" class="photo-preview" alt="Photo preview">
       <div class="actions">
-        <button class="primary" type="submit">SAVE PARTICIPANT</button>
+        <button class="primary" id="saveBtn" type="button">SAVE PARTICIPANT</button>
         <button type="button" id="reset">CLEAR FORM</button>
       </div>
       <div id="status" class="status">Ready.</div><div class="muted" style="margin-top:8px;font-size:.85rem">Storage bucket: <b>participant-photos</b> · If an upload fails, the page now shows the HTTP/network reason.</div>
@@ -196,7 +196,7 @@ async function makeQR(value){
   $("qrLabel").textContent="QR ID: "+value;
 }
 $("saveBtn").addEventListener("click",()=>saveParticipant({preventDefault:()=>{}}));
-$("form").addEventListener("submit",(e)=>{e.preventDefault();saveParticipant(e);});
+if(!$("saveBtn")) console.error("Save button not found.");
 $("reset").onclick=()=>{
   $("form").reset();
   $("preview").removeAttribute("src");

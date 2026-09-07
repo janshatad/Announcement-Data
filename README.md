@@ -105,3 +105,7 @@ The Admin page now uses a direct Supabase REST request for participant saving, w
 
 ## v5 form/save fix
 The Save button is now explicitly a non-submit button with a click handler. This prevents accidental Android/browser form navigation or reload. The form is never cleared after saving. The success message is displayed before QR generation, so QR rendering cannot hide a successful database save.
+
+
+## v6 critical button fix
+Fixed the Save button wiring: the button now has `id="saveBtn"` and `type="button"`. The previous version's automatic replacement missed the button because its HTML had `class` before `type`, causing the JavaScript click handler to fail and the browser to submit/reload the form. V6 removes that issue, so entered data will not disappear when Save is tapped.
