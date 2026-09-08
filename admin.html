@@ -1,1179 +1,353 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-<title>Admin - QR Event System</title>
-
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Admin — QR Event System</title>
 <link rel="stylesheet" href="style.css">
-
-<!-- QR Generator -->
 <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.4/build/qrcode.min.js"></script>
-
 </head>
-
 <body>
-
 <main class="wrap">
-
-<div class="panel">
+  <div class="panel">
     <h1>👤 Participant Registration</h1>
-    <p class="muted">
-        Create a participant, upload a picture, and generate a QR code.
-    </p>
-</div>
+    <p class="muted">Create a participant, upload a picture, and generate a QR code.</p>
+  </div>
 
+  <section class="panel grid">
+    <form id="form" novalidate>
+      <div class="field"><label for="qr">QR / Participant ID</label><input id="qr" placeholder="SM-2026-0001" required></div>
+      <div class="field"><label for="name">Full Name</label><input id="name" required></div>
+      <div class="field"><label for="position">Position</label><input id="position"></div>
+      <div class="field"><label for="org">Organization</label><input id="org"></div>
+      <div class="field"><label for="message">Message</label><textarea id="message">Welcome to the event!</textarea></div>
+      <div class="field"><label for="photo">Picture</label><input id="photo" type="file" accept="image/*"></div>
+      <img id="preview" class="photo-preview" alt="Photo preview">
 
-<section class="panel grid">
+      <div class="actions">
+        <button class="primary" id="saveBtn" type="submit">SAVE PARTICIPANT</button>
+        <button type="button" id="reset">CLEAR FORM</button>
+      </div>
+      <div id="status" class="status">Loading…</div>
+      <div class="muted" style="margin-top:8px;font-size:.85rem">
+        Storage bucket: <b>participant-photos</b>
+      </div>
+    </form>
 
-<form id="participantForm">
-
-    <div class="field">
-        <label>QR / Participant ID</label>
-        <input
-            id="qr"
-            type="text"
-            placeholder="SM-2026-0001"
-            required
-        >
+    <div>
+      <h2>QR Code</h2>
+      <div id="qrBox" class="qr-box"><canvas id="qrCanvas" width="260" height="260"></canvas></div>
+      <p id="qrLabel" class="muted">Save a participant to generate the QR.</p>
+      <div class="actions">
+        <button id="downloadQR" type="button">DOWNLOAD QR</button>
+        <button id="printQR" type="button">PRINT QR</button>
+      </div>
     </div>
+  </section>
 
-
-    <div class="field">
-        <label>Full Name</label>
-        <input
-            id="name"
-            type="text"
-            required
-        >
+  <section class="panel">
+    <h2>Participants</h2>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Photo</th><th>QR ID</th><th>Name</th><th>Position</th><th>Organization</th><th></th></tr></thead>
+        <tbody id="rows"></tbody>
+      </table>
     </div>
-
-
-    <div class="field">
-        <label>Position</label>
-        <input
-            id="position"
-            type="text"
-        >
-    </div>
-
-
-    <div class="field">
-        <label>Organization</label>
-        <input
-            id="org"
-            type="text"
-        >
-    </div>
-
-
-    <div class="field">
-        <label>Message</label>
-
-        <textarea id="message">Welcome to the event!</textarea>
-    </div>
-
-
-    <div class="field">
-        <label>Picture</label>
-
-        <input
-            id="photo"
-            type="file"
-            accept="image/*"
-        >
-    </div>
-
-
-    <img
-        id="preview"
-        class="photo-preview"
-        alt="Photo Preview"
-        style="display:none;"
-    >
-
-
-    <div class="actions">
-
-        <button
-            id="saveBtn"
-            class="primary"
-            type="button"
-        >
-            SAVE PARTICIPANT
-        </button>
-
-
-        <button
-            id="clearBtn"
-            type="button"
-        >
-            CLEAR FORM
-        </button>
-
-    </div>
-
-
-    <div
-        id="status"
-        class="status"
-    >
-        Ready.
-    </div>
-
-</form>
-
-
-<!-- QR AREA -->
-
-<div>
-
-    <h2>QR Code</h2>
-
-    <div
-        id="qrBox"
-        class="qr-box"
-    >
-        <canvas
-            id="qrCanvas"
-            width="260"
-            height="260"
-        ></canvas>
-    </div>
-
-
-    <p
-        id="qrLabel"
-        class="muted"
-    >
-        Save a participant to generate the QR.
-    </p>
-
-
-    <div class="actions">
-
-        <button
-            id="downloadQR"
-            type="button"
-        >
-            DOWNLOAD QR
-        </button>
-
-
-        <button
-            id="printQR"
-            type="button"
-        >
-            PRINT QR
-        </button>
-
-    </div>
-
-</div>
-
-</section>
-
-
-<section class="panel">
-
-<h2>Participants</h2>
-
-<div class="table-wrap">
-
-<table>
-
-<thead>
-
-<tr>
-<th>Photo</th>
-<th>QR ID</th>
-<th>Name</th>
-<th>Position</th>
-<th>Organization</th>
-<th></th>
-</tr>
-
-</thead>
-
-<tbody id="rows"></tbody>
-
-</table>
-
-</div>
-
-</section>
-
+  </section>
 </main>
 
-
 <script src="config.js"></script>
-
-
 <script>
+"use strict";
 
-/* =====================================================
-   SUPABASE CONFIG
-===================================================== */
-
-const SUPABASE_URL =
-    window.SUPABASE_URL;
-
-const SUPABASE_KEY =
-    window.SUPABASE_PUBLISHABLE_KEY;
-
-
-/* =====================================================
-   ELEMENT HELPER
-===================================================== */
-
-function $(id) {
-    return document.getElementById(id);
-}
-
-
-/* =====================================================
-   GLOBAL VARIABLES
-===================================================== */
-
+const $ = id => document.getElementById(id);
+const SUPABASE_URL = String(window.SUPABASE_URL || "").replace(/\/+$/, "");
+const SUPABASE_KEY = String(window.SUPABASE_PUBLISHABLE_KEY || "");
 let currentId = "";
 let currentPhoto = "";
 
-
-/* =====================================================
-   STATUS MESSAGE
-===================================================== */
-
-function status(message, success = false) {
-
-    const box = $("status");
-
-    box.textContent = message;
-
-    box.className =
-        "status " +
-        (success ? "success" : "error");
+function msg(text, ok=false) {
+  $("status").textContent = text;
+  $("status").className = "status " + (ok ? "success" : "error");
 }
 
+function headers(extra={}) {
+  return Object.assign({
+    "apikey": SUPABASE_KEY,
+    "Authorization": "Bearer " + SUPABASE_KEY
+  }, extra);
+}
 
-/* =====================================================
-   PHOTO PREVIEW
-===================================================== */
+async function fetchWithTimeout(url, options={}, ms=20000) {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), ms);
+  try {
+    return await fetch(url, Object.assign({}, options, {signal: controller.signal, cache:"no-store"}));
+  } catch (err) {
+    if (err && err.name === "AbortError") throw new Error("Request timed out after " + Math.round(ms/1000) + " seconds.");
+    throw new Error("Network/CORS error: " + (err && err.message ? err.message : String(err)));
+  } finally {
+    clearTimeout(timer);
+  }
+}
 
-$("photo").addEventListener(
-    "change",
-    function () {
+async function readError(response, fallback) {
+  const text = await response.text().catch(() => "");
+  if (!text) return fallback;
+  try {
+    const j = JSON.parse(text);
+    return j.message || j.details || j.hint || j.error || text;
+  } catch (_) {
+    return text;
+  }
+}
 
-        const file =
-            this.files[0];
+function validateConfig() {
+  if (!SUPABASE_URL || !SUPABASE_KEY) throw new Error("Supabase configuration is missing. Check config.js.");
+}
 
-        if (!file) {
-            $("preview").style.display =
-                "none";
+async function testDatabase() {
+  validateConfig();
+  const url = SUPABASE_URL + "/rest/v1/participants?select=id&limit=1";
+  const response = await fetchWithTimeout(url, {headers: headers()}, 10000);
+  if (!response.ok) throw new Error("Database HTTP " + response.status + ": " + await readError(response, "Connection rejected."));
+  return true;
+}
 
-            return;
-        }
-
-        const url =
-            URL.createObjectURL(file);
-
-        $("preview").src = url;
-
-        $("preview").style.display =
-            "block";
-    }
-);
-
-
-/* =====================================================
-   UPLOAD PHOTO
-===================================================== */
+$("photo").addEventListener("change", () => {
+  const file = $("photo").files[0];
+  if (file) $("preview").src = URL.createObjectURL(file);
+});
 
 async function uploadPhoto(file, qr) {
+  validateConfig();
 
-    if (!file) {
-        return "";
+  const ext = (file.name.split(".").pop() || "jpg").toLowerCase().replace(/[^a-z0-9]/g, "") || "jpg";
+  const safeQr = qr.replace(/[^a-zA-Z0-9_-]/g, "_");
+  const path = safeQr + "-" + Date.now() + "." + ext;
+
+  const url = SUPABASE_URL + "/storage/v1/object/participant-photos/" + encodeURIComponent(path);
+
+  const response = await fetchWithTimeout(url, {
+    method: "POST",
+    headers: headers({
+      "Content-Type": file.type || "application/octet-stream",
+      "x-upsert": "false",
+      "cache-control": "3600"
+    }),
+    body: file
+  }, 30000);
+
+  if (!response.ok) {
+    throw new Error("Storage HTTP " + response.status + ": " +
+      await readError(response, "Photo upload rejected."));
+  }
+
+  return SUPABASE_URL + "/storage/v1/object/public/participant-photos/" + encodeURIComponent(path);
+}
+
+async function saveParticipant(event) {
+  event.preventDefault();
+
+  const btn = $("saveBtn");
+  if (btn.dataset.saving === "1") return;
+
+  const qr = $("qr").value.trim();
+  const name = $("name").value.trim();
+
+  if (!qr) { msg("❌ QR ID is required."); $("qr").focus(); return; }
+  if (!name) { msg("❌ Full Name is required."); $("name").focus(); return; }
+
+  btn.dataset.saving = "1";
+  btn.disabled = true;
+  btn.textContent = "SAVING...";
+
+  try {
+    validateConfig();
+
+    let photoUrl = currentPhoto;
+    const file = $("photo").files[0];
+
+    if (file) {
+      msg("1/2 Uploading photo...");
+      photoUrl = await uploadPhoto(file, qr);
+      $("preview").src = photoUrl;
+      msg("2/2 Photo uploaded. Saving participant...");
+    } else {
+      msg("Saving participant...");
     }
 
+    const row = {
+      qr_code: qr,
+      name: name,
+      position: $("position").value.trim(),
+      organization: $("org").value.trim(),
+      message: $("message").value.trim(),
+      photo_url: photoUrl || ""
+    };
 
-    const extension =
-        (
-            file.name
-            .split(".")
-            .pop() ||
-            "jpg"
-        )
-        .toLowerCase()
-        .replace(
-            /[^a-z0-9]/g,
-            ""
-        );
-
-
-    const safeQR =
-        qr
-        .replace(
-            /[^a-zA-Z0-9_-]/g,
-            "_"
-        );
-
-
-    const filename =
-        safeQR +
-        "-" +
-        Date.now() +
-        "." +
-        extension;
-
-
-    const url =
-        SUPABASE_URL.replace(
-            /\/$/,
-            ""
-        ) +
-        "/storage/v1/object/participant-photos/" +
-        encodeURIComponent(filename);
-
-
-    status(
-        "Uploading photo..."
-    );
-
-
-    let response;
-
-
-    try {
-
-        response =
-            await fetch(
-                url,
-                {
-                    method: "POST",
-
-                    headers: {
-
-                        "apikey":
-                            SUPABASE_KEY,
-
-                        "Authorization":
-                            "Bearer " +
-                            SUPABASE_KEY,
-
-                        "Content-Type":
-                            file.type ||
-                            "image/jpeg",
-
-                        "x-upsert":
-                            "false"
-
-                    },
-
-                    body: file
-                }
-            );
-
-    }
-
-    catch (error) {
-
-        throw new Error(
-            "Photo upload connection failed: " +
-            error.message
-        );
-
-    }
-
-
-    const text =
-        await response.text();
-
+    const url = SUPABASE_URL + "/rest/v1/participants";
+    const response = await fetchWithTimeout(url, {
+      method: "POST",
+      headers: headers({
+        "Content-Type": "application/json",
+        "Prefer": "resolution=merge-duplicates,return=minimal"
+      }),
+      body: JSON.stringify(row)
+    }, 20000);
 
     if (!response.ok) {
-
-        let message =
-            text;
-
-        try {
-
-            const json =
-                JSON.parse(text);
-
-            message =
-                json.message ||
-                json.error ||
-                json.details ||
-                text;
-
-        }
-
-        catch (e) {}
-
-        throw new Error(
-            "Storage error " +
-            response.status +
-            ": " +
-            message
-        );
+      throw new Error("Database HTTP " + response.status + ": " +
+        await readError(response, "Participant was not saved."));
     }
 
+    currentId = qr;
+    currentPhoto = photoUrl || "";
 
-    /* PUBLIC PHOTO URL */
+    msg("✅ PARTICIPANT SAVED SUCCESSFULLY!", true);
 
-    const publicURL =
-        SUPABASE_URL.replace(
-            /\/$/,
-            ""
-        ) +
-        "/storage/v1/object/public/participant-photos/" +
-        encodeURIComponent(filename);
+    if (window.QRCode) {
+      try {
+        await QRCode.toCanvas($("qrCanvas"), qr, {
+          width: 260, margin: 2, errorCorrectionLevel: "M"
+        });
+        $("qrLabel").textContent = "QR ID: " + qr;
+      } catch (qrErr) {
+        console.warn("QR generation error:", qrErr);
+      }
+    }
 
+    await loadRows();
 
-    return publicURL;
+  } catch (err) {
+    console.error("Participant save error:", err);
+    msg("❌ SAVE FAILED: " + (err && err.message ? err.message : String(err)));
+  } finally {
+    btn.dataset.saving = "0";
+    btn.disabled = false;
+    btn.textContent = "SAVE PARTICIPANT";
+  }
 }
 
-
-/* =====================================================
-   SAVE PARTICIPANT
-===================================================== */
-
-async function saveParticipant() {
-
-    console.log(
-        "SAVE BUTTON CLICKED"
-    );
-
-
-    const qr =
-        $("qr").value.trim();
-
-    const name =
-        $("name").value.trim();
-
-
-    if (!qr) {
-
-        status(
-            "Please enter the QR / Participant ID."
-        );
-
-        $("qr").focus();
-
-        return;
-    }
-
-
-    if (!name) {
-
-        status(
-            "Please enter the participant name."
-        );
-
-        $("name").focus();
-
-        return;
-    }
-
-
-    const button =
-        $("saveBtn");
-
-
-    button.disabled =
-        true;
-
-    button.textContent =
-        "SAVING...";
-
-
-    try {
-
-        /* -----------------------------------------
-           PHOTO
-        ----------------------------------------- */
-
-        let photoURL =
-            currentPhoto;
-
-
-        const file =
-            $("photo").files[0];
-
-
-        if (file) {
-
-            photoURL =
-                await uploadPhoto(
-                    file,
-                    qr
-                );
-
-        }
-
-
-        /* -----------------------------------------
-           PARTICIPANT DATA
-        ----------------------------------------- */
-
-        status(
-            "Saving participant information..."
-        );
-
-
-        const participant = {
-
-            qr_code: qr,
-
-            name: name,
-
-            position:
-                $("position")
-                .value
-                .trim(),
-
-            organization:
-                $("org")
-                .value
-                .trim(),
-
-            message:
-                $("message")
-                .value
-                .trim(),
-
-            photo_url:
-                photoURL || ""
-
-        };
-
-
-        /* -----------------------------------------
-           SUPABASE DATABASE
-        ----------------------------------------- */
-
-        const databaseURL =
-            SUPABASE_URL.replace(
-                /\/$/,
-                ""
-            ) +
-            "/rest/v1/participants" +
-            "?on_conflict=qr_code";
-
-
-        let response;
-
-
-        try {
-
-            response =
-                await fetch(
-                    databaseURL,
-                    {
-
-                        method: "POST",
-
-                        headers: {
-
-                            "apikey":
-                                SUPABASE_KEY,
-
-                            "Authorization":
-                                "Bearer " +
-                                SUPABASE_KEY,
-
-                            "Content-Type":
-                                "application/json",
-
-                            "Prefer":
-                                "resolution=merge-duplicates,return=minimal"
-
-                        },
-
-                        body:
-                            JSON.stringify(
-                                participant
-                            )
-                    }
-                );
-
-        }
-
-        catch (error) {
-
-            throw new Error(
-                "Database connection failed: " +
-                error.message
-            );
-
-        }
-
-
-        const responseText =
-            await response.text();
-
-
-        if (!response.ok) {
-
-            let errorMessage =
-                responseText;
-
-            try {
-
-                const json =
-                    JSON.parse(
-                        responseText
-                    );
-
-                errorMessage =
-                    json.message ||
-                    json.details ||
-                    json.hint ||
-                    json.error ||
-                    responseText;
-
-            }
-
-            catch (e) {}
-
-            throw new Error(
-                "Database error " +
-                response.status +
-                ": " +
-                errorMessage
-            );
-        }
-
-
-        /* -----------------------------------------
-           SUCCESS
-        ----------------------------------------- */
-
-        currentId =
-            qr;
-
-        currentPhoto =
-            photoURL;
-
-
-        status(
-            "✅ PARTICIPANT SAVED SUCCESSFULLY!",
-            true
-        );
-
-
-        /* -----------------------------------------
-           GENERATE QR
-        ----------------------------------------- */
-
-        generateQR(qr);
-
-
-        /* -----------------------------------------
-           REFRESH PARTICIPANT LIST
-        ----------------------------------------- */
-
-        loadParticipants();
-
-
-    }
-
-    catch (error) {
-
-        console.error(
-            "SAVE ERROR:",
-            error
-        );
-
-
-        status(
-            "❌ " +
-            error.message
-        );
-
-    }
-
-    finally {
-
-        button.disabled =
-            false;
-
-        button.textContent =
-            "SAVE PARTICIPANT";
-    }
-
+function makeQR(value) {
+  if (!window.QRCode) return Promise.reject(new Error("QR library did not load."));
+  return QRCode.toCanvas($("qrCanvas"), value, {
+    width:260, margin:2, errorCorrectionLevel:"M"
+  }).then(() => {
+    $("qrLabel").textContent = "QR ID: " + value;
+  });
 }
 
+async function loadRows() {
+  try {
+    validateConfig();
+    const url = SUPABASE_URL + "/rest/v1/participants?select=*&order=created_at.desc&limit=100";
+    const response = await fetchWithTimeout(url, {headers: headers()}, 15000);
 
-/* =====================================================
-   GENERATE QR
-===================================================== */
-
-async function generateQR(value) {
-
-    try {
-
-        if (
-            typeof QRCode ===
-            "undefined"
-        ) {
-
-            throw new Error(
-                "QR library did not load."
-            );
-        }
-
-
-        await QRCode.toCanvas(
-            $("qrCanvas"),
-            value,
-            {
-
-                width: 260,
-
-                margin: 2,
-
-                errorCorrectionLevel:
-                    "M"
-
-            }
-        );
-
-
-        $("qrLabel").textContent =
-            "QR ID: " +
-            value;
-
+    if (!response.ok) {
+      throw new Error("Database HTTP " + response.status + ": " +
+        await readError(response, "Could not load participants."));
     }
 
-    catch (error) {
+    const data = await response.json();
 
-        console.error(
-            "QR ERROR:",
-            error
-        );
+    $("rows").innerHTML = data.map(p => `
+      <tr>
+        <td>${p.photo_url ? `<img class="thumb" src="${esc(p.photo_url)}" alt="">` : "—"}</td>
+        <td>${esc(p.qr_code)}</td>
+        <td>${esc(p.name)}</td>
+        <td>${esc(p.position || "")}</td>
+        <td>${esc(p.organization || "")}</td>
+        <td><button type="button" data-id="${esc(p.qr_code)}">LOAD</button></td>
+      </tr>
+    `).join("");
 
-    }
-
+    document.querySelectorAll("[data-id]").forEach(b => {
+      b.onclick = () => loadOne(b.dataset.id);
+    });
+  } catch (err) {
+    $("rows").innerHTML = "<tr><td colspan='6'>❌ " + esc(err.message || err) + "</td></tr>";
+  }
 }
 
-
-/* =====================================================
-   CLEAR FORM
-===================================================== */
-
-$("clearBtn").addEventListener(
-    "click",
-    function () {
-
-        $("participantForm").reset();
-
-        $("message").value =
-            "Welcome to the event!";
-
-        $("preview").style.display =
-            "none";
-
-        $("preview").removeAttribute(
-            "src"
-        );
-
-        currentId =
-            "";
-
-        currentPhoto =
-            "";
-
-        $("qrLabel").textContent =
-            "Save a participant to generate the QR.";
-
-        status(
-            "Form cleared."
-        );
-
-    }
-);
-
-
-/* =====================================================
-   DOWNLOAD QR
-===================================================== */
-
-$("downloadQR").addEventListener(
-    "click",
-    function () {
-
-        if (!currentId) {
-
-            alert(
-                "Save a participant first."
-            );
-
-            return;
-        }
-
-
-        const link =
-            document.createElement(
-                "a"
-            );
-
-
-        link.download =
-            currentId +
-            ".png";
-
-
-        link.href =
-            $("qrCanvas")
-            .toDataURL(
-                "image/png"
-            );
-
-
-        link.click();
-
-    }
-);
-
-
-/* =====================================================
-   PRINT QR
-===================================================== */
-
-$("printQR").addEventListener(
-    "click",
-    function () {
-
-        if (!currentId) {
-
-            alert(
-                "Save a participant first."
-            );
-
-            return;
-        }
-
-
-        const image =
-            $("qrCanvas")
-            .toDataURL(
-                "image/png"
-            );
-
-
-        const printWindow =
-            window.open(
-                "",
-                "_blank"
-            );
-
-
-        printWindow.document.write(`
-
-            <html>
-
-            <head>
-
-            <title>
-                ${currentId}
-            </title>
-
-            </head>
-
-            <body
-                style="
-                text-align:center;
-                font-family:Arial;
-                "
-            >
-
-                <h2>
-                    ${currentId}
-                </h2>
-
-                <img
-                    src="${image}"
-                    style="width:300px"
-                >
-
-                <p>
-                    Scan ID:
-                    ${currentId}
-                </p>
-
-            </body>
-
-            </html>
-
-        `);
-
-
-        printWindow.document.close();
-
-        printWindow.print();
-
-    }
-);
-
-
-/* =====================================================
-   LOAD PARTICIPANTS
-===================================================== */
-
-async function loadParticipants() {
-
-    const url =
-        SUPABASE_URL.replace(
-            /\/$/,
-            ""
-        ) +
-        "/rest/v1/participants" +
-        "?select=*" +
-        "&order=created_at.desc" +
-        "&limit=100";
-
-
-    try {
-
-        const response =
-            await fetch(
-                url,
-                {
-
-                    headers: {
-
-                        "apikey":
-                            SUPABASE_KEY,
-
-                        "Authorization":
-                            "Bearer " +
-                            SUPABASE_KEY
-
-                    }
-
-                }
-            );
-
-
-        const text =
-            await response.text();
-
-
-        if (!response.ok) {
-
-            throw new Error(
-                text
-            );
-
-        }
-
-
-        const data =
-            JSON.parse(text);
-
-
-        const rows =
-            $("rows");
-
-
-        rows.innerHTML =
-            "";
-
-
-        if (
-            !data ||
-            data.length === 0
-        ) {
-
-            rows.innerHTML = `
-
-                <tr>
-
-                    <td colspan="6">
-
-                        No participants yet.
-
-                    </td>
-
-                </tr>
-
-            `;
-
-            return;
-        }
-
-
-        data.forEach(
-            function (p) {
-
-                const tr =
-                    document.createElement(
-                        "tr"
-                    );
-
-
-                tr.innerHTML = `
-
-                    <td>
-
-                        ${
-                            p.photo_url
-                            ?
-                            `<img
-                                class="thumb"
-                                src="${escapeHTML(p.photo_url)}"
-                                alt=""
-                            >`
-                            :
-                            "—"
-                        }
-
-                    </td>
-
-                    <td>
-                        ${escapeHTML(p.qr_code)}
-                    </td>
-
-                    <td>
-                        ${escapeHTML(p.name)}
-                    </td>
-
-                    <td>
-                        ${escapeHTML(p.position || "")}
-                    </td>
-
-                    <td>
-                        ${escapeHTML(p.organization || "")}
-                    </td>
-
-                    <td>
-
-                        <button
-                            type="button"
-                            class="loadButton"
-                            data-id="${escapeHTML(p.qr_code)}"
-                        >
-                            LOAD
-                        </button>
-
-                    </td>
-
-                `;
-
-
-                rows.appendChild(
-                    tr
-                );
-
-
-                tr.querySelector(
-                    ".loadButton"
-                ).addEventListener(
-                    "click",
-                    function () {
-
-                        loadParticipant(
-                            p.qr_code
-                        );
-
-                    }
-                );
-
-            }
-        );
-
-    }
-
-    catch (error) {
-
-        console.error(
-            "LOAD ERROR:",
-            error
-        );
-
-        $("rows").innerHTML = `
-
-            <tr>
-
-                <td colspan="6">
-
-                    Unable to load participants.
-
-                </td>
-
-            </tr>
-
-        `;
-
-    }
-
+async function loadOne(id) {
+  try {
+    const url = SUPABASE_URL + "/rest/v1/participants?select=*&qr_code=eq." + encodeURIComponent(id) + "&limit=1";
+    const response = await fetchWithTimeout(url, {headers: headers()}, 15000);
+
+    if (!response.ok) throw new Error(await readError(response, "Could not load participant."));
+    const list = await response.json();
+    const data = list[0];
+
+    if (!data) throw new Error("Participant not found.");
+
+    $("qr").value = data.qr_code || "";
+    $("name").value = data.name || "";
+    $("position").value = data.position || "";
+    $("org").value = data.organization || "";
+    $("message").value = data.message || "";
+    currentPhoto = data.photo_url || "";
+    currentId = data.qr_code || "";
+
+    if (data.photo_url) $("preview").src = data.photo_url;
+    else $("preview").removeAttribute("src");
+
+    await makeQR(data.qr_code);
+    msg("Participant loaded. You can edit and save it.", true);
+    window.scrollTo({top:0, behavior:"smooth"});
+  } catch (err) {
+    msg("❌ LOAD FAILED: " + (err.message || err));
+  }
 }
 
+function esc(s) {
+  return String(s ?? "").replace(/[&<>"']/g, c => ({
+    "&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;", "'":"&#39;"
+  }[c]));
+}
 
-/* =====================================================
-   LOAD ONE PARTICIPANT
-===================================================== */
+$("form").addEventListener("submit", saveParticipant);
 
-async function loadParticipant(id) {
+$("reset").onclick = () => {
+  $("form").reset();
+  $("preview").removeAttribute("src");
+  $("qrLabel").textContent = "Save a participant to generate the QR.";
+  currentId = "";
+  currentPhoto = "";
+  msg("Form cleared.", true);
+};
 
-    const url =
-        SUPABASE_URL.replace(
-            /\/$/,
-            ""
-        ) +
-        "/rest/v1/participants" +
-        "?select=*" +
-        "&qr_code=eq." +
-        encodeURIComponent(id);
+$("downloadQR").onclick = () => {
+  if (!currentId) { alert("Save a participant first."); return; }
+  const a = document.createElement("a");
+  a.download = currentId + ".png";
+  a.href = $("qrCanvas").toDataURL("image/png");
+  a.click();
+};
 
+$("printQR").onclick = () => {
+  if (!currentId) { alert("Save a participant first."); return; }
+  const w = window.open("", "_blank");
+  if (!w) { alert("Please allow pop-ups to print the QR."); return; }
+  w.document.write(
+    "<html><body style='text-align:center;font-family:Arial'>" +
+    "<h2>" + esc(currentId) + "</h2>" +
+    "<img src='" + $("qrCanvas").toDataURL("image/png") + "' style='width:300px'>" +
+    "<p>Scan ID: " + esc(currentId) + "</p></body></html>"
+  );
+  w.document.close();
+  w.print();
+};
 
-    try {
-
-        const response =
-            await fetch(
-                url,
-                {
-
-                    headers: {
-
-                        "apikey":
-                            SUPABASE_KEY,
-
-                        "Authorization":
-                            "Bearer " +
-                            SUPABASE_KEY
-
-                    }
-
-                }
-            );
-
-
-        const data =
-            await response.json();
-
-
-        if (
-            !response.ok ||
-            !data.length
-        ) {
-
-            throw new Error(
-                "Participant not found."
-            );
-
-        }
-
-
-        const p =
-            data[0];
-
-
-        $("qr").value =
-            p.qr_code || "";
-
-        $("name").value =
-            p.name || "";
-
-        $("position").value =
-       
+(async function init() {
+  try {
+    await testDatabase();
+    msg("✅ Connected to Supabase. Ready.", true);
+    await loadRows();
+  } catch (err) {
+    msg("❌ Supabase connection failed: " + (err.message || err));
+  }
+})();
+</script>
+</body>
+</html>
