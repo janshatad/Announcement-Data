@@ -1,77 +1,275 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>QR Scanner</title>
-<link rel="stylesheet" href="style.css">
-<script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>QR Scanner — Check</title>
+
+<script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-</head>
-<body>
-<main class="wrap">
-<section class="panel">
-<h1>📷 QR Scanner</h1>
-<p id="status" class="status">Tap START CAMERA.</p>
-<div id="reader"></div>
-<div class="actions"><button class="primary" id="start">START CAMERA</button><button id="stop" disabled>STOP</button></div>
-</section>
-<section class="panel result-card">
-<img id="photo" class="result-photo" alt="Participant photo">
-<div><h1 id="name">READY TO SCAN</h1><h2 id="info">Scan a QR code.</h2><p id="message"></p></div>
-</section>
-<section class="panel"><h2>Last QR Data</h2><pre id="raw">None</pre></section>
-</main>
-<script src="config.js"></script>
-<script>
-const db=supabase.createClient(window.SUPABASE_URL,window.SUPABASE_PUBLISHABLE_KEY);
-const $=id=>document.getElementById(id);
-let scanner=null,running=false,last="",lastAt=0;
 
-async function start(){
- if(running)return;
- if(!window.isSecureContext){$("status").textContent="Camera requires HTTPS. Open the GitHub Pages HTTPS address.";return}
- try{
-  scanner=new Html5Qrcode("reader");
-  await scanner.start({facingMode:"environment"},{fps:10,qrbox:{width:250,height:250}},onScan,()=>{});
-  running=true;$('start').disabled=true;$('stop').disabled=false;$('status').textContent="CAMERA ACTIVE — SCAN QR";
- }catch(e){console.error(e);$('status').textContent="Camera failed. Allow camera permission and use HTTPS."}
-}
-async function stop(){if(!scanner||!running)return;try{await scanner.stop();await scanner.clear()}catch(e){}running=false;$('start').disabled=false;$('stop').disabled=true;$('status').textContent="Camera stopped."}
-
-async function onScan(text){
- const now=Date.now();
- if(text===last&&now-lastAt<2500)return;
- last=text;lastAt=now;
- const qr=text.trim();
- $('raw').textContent=qr;
- $('status').textContent="QR FOUND — LOOKING UP DATABASE...";
-
- try{
-  const {data:p,error}=await db.from("participants").select("*").eq("qr_code",qr).maybeSingle();
-  if(error)throw new Error("Participant lookup failed: "+error.message);
-  if(!p){$('status').textContent="QR NOT FOUND: "+qr;return;}
-
-  $('photo').src=p.photo_url||"";
-  $('name').textContent=p.name||"PARTICIPANT";
-  $('info').textContent=[p.position,p.organization].filter(Boolean).join(" • ")||"Registered Participant";
-  $('message').textContent=p.message||"Welcome!";
-
-  const {error:scanError}=await db.from("scan_history").insert({participant_id:p.id,scanner_name:"Main Scanner"});
-  if(scanError){
-    $('status').textContent="PARTICIPANT FOUND, BUT SCAN WAS NOT RECORDED.\n"+scanError.message;
-    console.error("scan_history insert failed:",scanError);
-    return;
+<style>
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    min-height: 100vh;
+    font-family: Arial, Helvetica, sans-serif;
+    background: #050505;
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
   }
 
-  $('status').textContent="SCAN RECORDED — LED WALL UPDATED";
- }catch(e){
-  console.error(e);
-  $('status').textContent="SCAN ERROR\n"+e.message;
- }
+  .scanner-wrap {
+    width: min(92vw, 720px);
+    text-align: center;
+  }
+
+  h1 {
+    margin: 0 0 8px;
+    font-size: clamp(28px, 5vw, 44px);
+  }
+
+  .status {
+    min-height: 28px;
+    margin-bottom: 18px;
+    color: #aaa;
+    font-size: 16px;
+  }
+
+  #reader {
+    width: 100%;
+    max-width: 620px;
+    margin: 0 auto;
+    overflow: hidden;
+    border-radius: 18px;
+    background: #111;
+  }
+
+  .hint {
+    margin-top: 16px;
+    color: #888;
+    font-size: 14px;
+  }
+
+  /* Success popup */
+  .check-overlay {
+    position: fixed;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(0,0,0,.72);
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity .18s ease;
+    z-index: 9999;
+  }
+
+  .check-overlay.show {
+    opacity: 1;
+    visibility: visible;
+  }
+
+  .check-card {
+    width: min(82vw, 430px);
+    padding: 34px 28px;
+    border-radius: 28px;
+    background: #111;
+    border: 2px solid #20d66b;
+    box-shadow: 0 0 60px rgba(32,214,107,.28);
+    transform: scale(.85);
+    transition: transform .18s ease;
+  }
+
+  .check-overlay.show .check-card {
+    transform: scale(1);
+  }
+
+  .check-icon {
+    width: 110px;
+    height: 110px;
+    margin: 0 auto 18px;
+    border-radius: 50%;
+    background: #20d66b;
+    color: #06160d;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 70px;
+    font-weight: 900;
+  }
+
+  .check-title {
+    font-size: 46px;
+    font-weight: 900;
+    letter-spacing: 2px;
+  }
+
+  .check-name {
+    margin-top: 8px;
+    color: #ccc;
+    font-size: 18px;
+  }
+
+  .error {
+    color: #ff6868;
+  }
+</style>
+</head>
+
+<body>
+  <main class="scanner-wrap">
+    <h1>QR SCANNER</h1>
+    <div id="status" class="status">Starting camera...</div>
+    <div id="reader"></div>
+    <div class="hint">Scan a registered participant QR code.</div>
+  </main>
+
+  <div id="checkOverlay" class="check-overlay" aria-hidden="true">
+    <div class="check-card">
+      <div class="check-icon">✓</div>
+      <div class="check-title">CHECK</div>
+      <div id="checkName" class="check-name"></div>
+    </div>
+  </div>
+
+<script>
+const SUPABASE_URL = "https://bduudxtfqyswgwimvzpr.supabase.co";
+const SUPABASE_KEY = "sb_publishable_Qf9weBIOViUWuNA6STFB2A_CFMMevop";
+
+const supabaseClient = window.supabase.createClient(
+  SUPABASE_URL,
+  SUPABASE_KEY
+);
+
+const statusEl = document.getElementById("status");
+const overlay = document.getElementById("checkOverlay");
+const checkName = document.getElementById("checkName");
+
+let scanner = null;
+let processing = false;
+
+function vibrateSuccess() {
+  if ("vibrate" in navigator) {
+    // Short double vibration — no audio/TTS.
+    navigator.vibrate([120, 70, 120]);
+  }
 }
 
-$('start').onclick=start;$('stop').onclick=stop;
+function showCheck(name) {
+  checkName.textContent = name || "";
+  overlay.classList.add("show");
+  overlay.setAttribute("aria-hidden", "false");
+
+  setTimeout(() => {
+    overlay.classList.remove("show");
+    overlay.setAttribute("aria-hidden", "true");
+  }, 1300);
+}
+
+async function processQr(qrText) {
+  if (processing) return;
+  processing = true;
+
+  try {
+    const qrCode = String(qrText || "").trim();
+
+    if (!qrCode) throw new Error("Empty QR code.");
+
+    statusEl.textContent = "Checking...";
+
+    // Find participant by QR code.
+    const { data: participant, error: participantError } =
+      await supabaseClient
+        .from("participants")
+        .select("id,name,position,organization,qr_code")
+        .eq("qr_code", qrCode)
+        .maybeSingle();
+
+    if (participantError) throw participantError;
+
+    if (!participant) {
+      statusEl.innerHTML =
+        '<span class="error">QR code not registered.</span>';
+
+      if ("vibrate" in navigator) {
+        navigator.vibrate([250, 80, 250]);
+      }
+
+      setTimeout(() => {
+        statusEl.textContent = "Ready to scan.";
+      }, 1500);
+
+      return;
+    }
+
+    // Record the scan. This triggers the LED Wall display.
+    const { error: historyError } = await supabaseClient
+      .from("scan_history")
+      .insert({
+        participant_id: participant.id,
+        scanner_name: "QR Scanner"
+      });
+
+    if (historyError) throw historyError;
+
+    // Scanner itself does NOT use TTS.
+    vibrateSuccess();
+    showCheck(participant.name);
+
+    statusEl.textContent = "Ready to scan.";
+
+  } catch (error) {
+    console.error(error);
+    statusEl.innerHTML =
+      '<span class="error">Scan error. Please try again.</span>';
+
+    if ("vibrate" in navigator) {
+      navigator.vibrate([250, 80, 250]);
+    }
+
+    setTimeout(() => {
+      statusEl.textContent = "Ready to scan.";
+    }, 1800);
+  } finally {
+    // Prevent duplicate scans from the same QR while the popup is showing.
+    setTimeout(() => {
+      processing = false;
+    }, 1500);
+  }
+}
+
+async function startScanner() {
+  scanner = new Html5Qrcode("reader");
+
+  const config = {
+    fps: 10,
+    qrbox: function(viewfinderWidth, viewfinderHeight) {
+      const size = Math.min(viewfinderWidth, viewfinderHeight) * 0.72;
+      return { width: size, height: size };
+    },
+    aspectRatio: 1.0
+  };
+
+  try {
+    await scanner.start(
+      { facingMode: "environment" },
+      config,
+      (decodedText) => processQr(decodedText),
+      () => {}
+    );
+
+    statusEl.textContent = "Ready to scan.";
+  } catch (error) {
+    console.error(error);
+    statusEl.innerHTML =
+      '<span class="error">Camera could not start. Allow camera permission and reload.</span>';
+  }
+}
+
+window.addEventListener("load", startScanner);
 </script>
 </body>
 </html>
