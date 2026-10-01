@@ -1,297 +1,48 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>LED Wall Display</title>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>LED Event Display</title>
 <style>
-*{box-sizing:border-box}
-html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#000;color:#fff;font-family:Arial,Helvetica,sans-serif}
-body{display:flex;align-items:center;justify-content:center}
-.screen{width:100vw;height:100vh;display:flex;align-items:center;justify-content:center;text-align:center;padding:4vh 5vw;position:relative;overflow:hidden;background:radial-gradient(circle at center,#172554 0%,#020617 55%,#000 100%)}
-.screen:before{content:"";position:absolute;width:75vmax;height:75vmax;border-radius:50%;background:radial-gradient(circle,rgba(37,99,235,.30),transparent 65%);filter:blur(35px);animation:pulse 6s ease-in-out infinite}
-@keyframes pulse{0%,100%{transform:scale(.9);opacity:.5}50%{transform:scale(1.1);opacity:.9}}
-.content{position:relative;z-index:2;width:100%;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center}
-.welcome{font-size:clamp(28px,4vw,80px);font-weight:900;letter-spacing:clamp(2px,.5vw,8px);margin-bottom:2vh;text-shadow:0 0 15px rgba(255,255,255,.5),0 0 35px rgba(37,99,235,.8)}
-.photo{width:clamp(170px,25vh,430px);height:clamp(170px,25vh,430px);border-radius:50%;object-fit:cover;border:clamp(4px,.5vw,10px) solid #fff;box-shadow:0 0 25px rgba(255,255,255,.35),0 0 60px rgba(37,99,235,.85);background:#1e293b;margin-bottom:2vh}
-.name{font-size:clamp(34px,6vw,110px);font-weight:900;line-height:1.05;max-width:95vw;word-wrap:break-word;text-transform:uppercase;text-shadow:0 0 12px rgba(255,255,255,.6),0 0 35px rgba(37,99,235,.9)}
-.info{font-size:clamp(20px,3vw,55px);font-weight:600;margin-top:1.5vh;max-width:90vw;line-height:1.2;text-shadow:0 0 15px rgba(255,255,255,.5)}
-.message{font-size:clamp(18px,2.3vw,42px);max-width:85vw;line-height:1.3;margin-top:2vh}
-.footer{position:absolute;bottom:1.5vh;left:0;width:100%;font-size:clamp(9px,1vw,18px);letter-spacing:3px;opacity:.35}
-
-/* Startup setup */
-#setup{position:fixed;inset:0;z-index:100;display:flex;align-items:center;justify-content:center;background:rgba(2,6,23,.97);padding:20px}
-.setup-card{width:min(560px,94vw);background:#fff;color:#0f172a;border-radius:20px;padding:28px;box-shadow:0 25px 80px rgba(0,0,0,.5)}
-.setup-card h1{margin:0 0 8px;font-size:28px}
-.setup-card p{color:#64748b;line-height:1.5}
-.setup-card label{display:block;font-weight:700;margin:15px 0 7px}
-.setup-card select,.setup-card input{width:100%;padding:12px;border:1px solid #cbd5e1;border-radius:9px;font-size:15px}
-.row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
-.setup-buttons{display:flex;gap:10px;margin-top:20px}
-.setup-buttons button{flex:1;padding:13px;border:0;border-radius:9px;font-weight:800;cursor:pointer}
-#testVoice{background:#475569;color:#fff}
-#startDisplay{background:#16a34a;color:#fff}
-#setupStatus{margin-top:12px;font-size:13px;color:#64748b;white-space:pre-wrap}
-.voice-note{font-size:12px;color:#64748b;margin-top:8px}
-@media(max-width:600px){.row{grid-template-columns:1fr}.setup-card{padding:20px}}
-body.started #setup{display:none}
+*{box-sizing:border-box}html,body{margin:0;width:100%;height:100%;background:#000;color:#fff;font-family:Arial,Helvetica,sans-serif;overflow:hidden}body{display:flex;align-items:center;justify-content:center}.screen{width:100vw;height:100vh;display:flex;align-items:center;justify-content:center;text-align:center;position:relative}.welcome{font-size:clamp(42px,7vw,110px);font-weight:800;letter-spacing:.04em}.card{width:min(92vw,1400px);display:grid;grid-template-columns:minmax(260px,42%) 1fr;gap:clamp(25px,5vw,80px);align-items:center}.photo{width:min(38vw,520px);height:min(58vh,620px);object-fit:cover;border-radius:30px;background:#111;box-shadow:0 0 50px #222}.info{text-align:left}.name{font-size:clamp(42px,6vw,100px);font-weight:900;line-height:1.05}.position{font-size:clamp(24px,3vw,50px);margin-top:18px;opacity:.9}.org{font-size:clamp(20px,2.2vw,36px);margin-top:12px;opacity:.75}.message{font-size:clamp(22px,2.5vw,40px);margin-top:35px;line-height:1.35;opacity:.95}.hidden{display:none!important}
+#setup{position:fixed;inset:0;background:rgba(0,0,0,.97);z-index:99;display:flex;align-items:center;justify-content:center;padding:25px}.panel{width:min(680px,95vw);background:#101010;border:1px solid #333;border-radius:24px;padding:28px;box-shadow:0 25px 80px #000}.panel h1{margin:0 0 8px;font-size:30px}.panel p{color:#aaa;margin:0 0 22px}.row{margin:14px 0}.row label{display:block;font-size:14px;color:#bbb;margin-bottom:7px}.row select,.row input{width:100%;padding:12px;border-radius:10px;border:1px solid #444;background:#181818;color:#fff}.buttons{display:flex;gap:10px;flex-wrap:wrap;margin-top:20px}.btn{border:0;border-radius:12px;padding:13px 18px;font-weight:800;cursor:pointer}.primary{background:#fff;color:#000}.secondary{background:#252525;color:#fff}.status{font-size:13px;color:#999;margin-top:15px;min-height:18px}.sliders{display:grid;grid-template-columns:1fr 1fr;gap:15px}.check{display:flex;align-items:center;gap:10px;margin-top:12px;color:#ccc}.check input{width:auto}#error{position:fixed;bottom:18px;left:50%;transform:translateX(-50%);background:#600;padding:10px 16px;border-radius:9px;display:none;z-index:120;max-width:90vw;text-align:center}
+@media(max-width:800px){.card{grid-template-columns:1fr;text-align:center}.photo{width:55vw;height:35vh;margin:auto}.info{text-align:center}.message{margin-top:20px}}
 </style>
 </head>
 <body>
-
-<div id="setup">
-  <div class="setup-card">
-    <h1>🎙️ LED Wall Voice Setup</h1>
-    <p>Select and test the announcement voice before starting the LED Wall. After you press Start, this setup disappears and the LED Wall becomes completely clean.</p>
-
-    <label for="voiceSelect">TTS Voice</label>
-    <select id="voiceSelect"></select>
-    <div class="voice-note">
-      Recommended for natural voices: use Microsoft Edge and choose a voice marked Natural/Neural when available.
-    </div>
-
-    <div class="row">
-      <div>
-        <label for="rate">Speech Rate</label>
-        <input id="rate" type="number" min="0.6" max="1.5" step="0.05" value="0.95">
-      </div>
-      <div>
-        <label for="volume">Volume</label>
-        <input id="volume" type="number" min="0" max="1" step="0.1" value="1">
-      </div>
-    </div>
-
-    <label>
-      <input id="autoTTS" type="checkbox" checked style="width:auto">
-      Automatically announce every scanned participant
-    </label>
-
-    <div class="setup-buttons">
-      <button id="testVoice" type="button">🔊 TEST VOICE</button>
-      <button id="startDisplay" type="button">⛶ START LED DISPLAY</button>
-    </div>
-
-    <div id="setupStatus">Loading available browser voices...</div>
-  </div>
-</div>
-
-<main class="screen">
-  <div class="content">
-    <div class="welcome">WELCOME</div>
-    <img id="photo" class="photo" alt="">
-    <div id="name" class="name">READY TO SCAN</div>
-    <div id="info" class="info">Waiting for the next QR scan...</div>
-    <div id="message" class="message"></div>
-    <div class="footer">QR EVENT INFORMATION SYSTEM</div>
-  </div>
-</main>
-
+<div id="setup"><div class="panel">
+<h1>LED Wall Voice Setup</h1><p>Choose your ElevenLabs voice before starting the immersive LED display.</p>
+<div class="row"><label>ElevenLabs Voice</label><select id="voice"></select></div>
+<div class="sliders"><div class="row"><label>Stability <span id="stabilityVal">0.50</span></label><input id="stability" type="range" min="0" max="1" step="0.01" value="0.50"></div><div class="row"><label>Similarity <span id="similarityVal">0.75</span></label><input id="similarity" type="range" min="0" max="1" step="0.01" value="0.75"></div></div>
+<div class="row"><label>Speed <span id="speedVal">1.00</span></label><input id="speed" type="range" min="0.7" max="1.2" step="0.01" value="1"></div>
+<label class="check"><input id="autoTts" type="checkbox" checked> Automatically announce each scanned participant</label>
+<div class="buttons"><button class="btn secondary" id="test">TEST VOICE</button><button class="btn primary" id="start">START LED DISPLAY</button></div>
+<div class="status" id="status">Loading ElevenLabs voices…</div>
+</div></div>
+<div class="screen"><div id="welcome" class="welcome">READY TO SCAN</div><div id="card" class="card hidden"><img id="photo" class="photo" alt="Participant"><div class="info"><div id="name" class="name"></div><div id="position" class="position"></div><div id="org" class="org"></div><div id="message" class="message"></div></div></div></div>
+<div id="error"></div>
 <script>
-const SUPABASE_URL="https://bduudxtfqyswgwimvzpr.supabase.co";
-const SUPABASE_KEY="sb_publishable_Qf9weBIOViUWuNA6STFB2A_CFMMevop";
-const db=supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
-
-let voices=[];
-let lastScanId=null;
-let started=false;
-
-const voiceSelect=document.getElementById("voiceSelect");
-const setupStatus=document.getElementById("setupStatus");
-
-function voiceScore(v){
-  const s=(v.name+" "+v.lang).toLowerCase();
-  let score=0;
-  if(s.includes("natural"))score+=100;
-  if(s.includes("neural"))score+=90;
-  if(s.includes("online"))score+=70;
-  if(v.lang.toLowerCase()==="en-ph")score+=30;
-  if(s.includes("jenny"))score+=20;
-  if(s.includes("aria"))score+=20;
-  if(s.includes("emma"))score+=20;
-  if(s.includes("brian"))score+=20;
-  if(s.includes("roger"))score+=15;
-  return score;
-}
-
-function loadVoices(){
-  if(!("speechSynthesis" in window)){
-    setupStatus.textContent="Speech synthesis is not supported by this browser.";
-    return;
-  }
-
-  voices=speechSynthesis.getVoices()||[];
-
-  const old=localStorage.getItem("led_tts_voice")||"";
-  voiceSelect.innerHTML="";
-
-  const sorted=[...voices].sort((a,b)=>voiceScore(b)-voiceScore(a));
-
-  if(!sorted.length){
-    voiceSelect.innerHTML='<option value="">Default browser voice</option>';
-    setupStatus.textContent="No voice list returned yet. Try opening this page in Microsoft Edge or reload the page.";
-    return;
-  }
-
-  sorted.forEach((v,i)=>{
-    const o=document.createElement("option");
-    o.value=v.name;
-    o.textContent=v.name+" — "+v.lang;
-    if(v.name===old)o.selected=true;
-    voiceSelect.appendChild(o);
-  });
-
-  setupStatus.textContent=
-    sorted.length+" voices detected. Natural/Neural voices are placed first when the browser exposes them.";
-}
-
-if("speechSynthesis" in window){
-  speechSynthesis.onvoiceschanged=loadVoices;
-  setTimeout(loadVoices,300);
-  setTimeout(loadVoices,1200);
-}else{
-  setupStatus.textContent="This browser does not support speech synthesis.";
-}
-
-async function loadSavedSettings(){
-  try{
-    const {data,error}=await db.from("system_settings").select("*").eq("id",1).maybeSingle();
-    if(error||!data)return;
-
-    if(data.tts_rate)document.getElementById("rate").value=data.tts_rate;
-    if(data.tts_volume!==undefined)document.getElementById("volume").value=data.tts_volume;
-    document.getElementById("autoTTS").checked=data.tts_enabled!==false;
-
-    if(data.tts_voice){
-      localStorage.setItem("led_tts_voice",data.tts_voice);
-      setTimeout(loadVoices,300);
-    }
-  }catch(e){console.log("TTS settings not loaded:",e)}
-}
-loadSavedSettings();
-
-function getSelectedVoice(){
-  return voices.find(v=>v.name===voiceSelect.value)||null;
-}
-
-function speak(text){
-  if(!("speechSynthesis" in window))return false;
-
-  speechSynthesis.cancel();
-
-  const u=new SpeechSynthesisUtterance(text);
-  const v=getSelectedVoice();
-
-  if(v)u.voice=v;
-
-  u.rate=Number(document.getElementById("rate").value)||.95;
-  u.pitch=1;
-  u.volume=Number(document.getElementById("volume").value)||1;
-
-  speechSynthesis.speak(u);
-  return true;
-}
-
-document.getElementById("testVoice").onclick=()=>{
-  if(!voices.length)loadVoices();
-  const voiceName=voiceSelect.value;
-  localStorage.setItem("led_tts_voice",voiceName);
-
-  const ok=speak(
-    "Good day. This is the selected announcement voice for the LED Wall. Welcome to the event."
-  );
-
-  setupStatus.textContent=ok
-    ? "Playing voice preview: "+(voiceName||"Default voice")
-    : "TTS is not available in this browser.";
-};
-
-async function saveSettings(){
-  const payload={
-    tts_enabled:document.getElementById("autoTTS").checked,
-    tts_voice:voiceSelect.value||"",
-    tts_rate:Number(document.getElementById("rate").value)||.95,
-    tts_pitch:1,
-    tts_volume:Number(document.getElementById("volume").value)||1,
-    updated_at:new Date().toISOString()
-  };
-
-  localStorage.setItem("led_tts_voice",payload.tts_voice);
-
-  try{
-    await db.from("system_settings").upsert({id:1,...payload});
-  }catch(e){
-    console.log("Could not save cloud TTS settings:",e);
-  }
-
-  return payload;
-}
-
-async function startDisplay(){
-  await saveSettings();
-
-  /* User gesture unlocks browser speech + fullscreen */
-  speak("LED Wall display is ready.");
-
-  try{
-    if(document.documentElement.requestFullscreen){
-      await document.documentElement.requestFullscreen();
-    }else if(document.documentElement.webkitRequestFullscreen){
-      document.documentElement.webkitRequestFullscreen();
-    }
-  }catch(e){
-    console.log("Fullscreen requires browser permission:",e);
-  }
-
-  started=true;
-  document.body.classList.add("started");
-}
-
-document.getElementById("startDisplay").onclick=startDisplay;
-
-async function displayParticipant(p){
-  const img=document.getElementById("photo");
-
-  if(p.photo_url)img.src=p.photo_url;
-  else img.removeAttribute("src");
-
-  document.getElementById("name").textContent=p.name||"PARTICIPANT";
-  document.getElementById("info").textContent=[p.position,p.organization].filter(Boolean).join(" • ")||"Registered Participant";
-  document.getElementById("message").textContent=p.message||"";
-
-  if(document.getElementById("autoTTS").checked){
-    let text="Now welcoming "+(p.name||"participant")+".";
-    if(p.position)text+=" "+p.position+".";
-    if(p.organization)text+=" From "+p.organization+".";
-    if(p.message)text+=" "+p.message;
-    speak(text);
-  }
-}
-
-async function poll(){
-  if(!started)return;
-
-  try{
-    const {data,error}=await db.from("scan_history").select("id,participant_id").order("id",{ascending:false}).limit(1).maybeSingle();
-    if(error||!data||data.id===lastScanId)return;
-
-    lastScanId=data.id;
-
-    const {data:p,error:pe}=await db.from("participants").select("*").eq("id",data.participant_id).maybeSingle();
-
-    if(pe||!p){
-      console.error("Participant lookup failed:",pe);
-      return;
-    }
-
-    displayParticipant(p);
-  }catch(e){
-    console.error("LED polling error:",e);
-  }
-}
-
-poll();
-setInterval(poll,1000);
+const SUPABASE_URL='https://bduudxtfqyswgwimvzpr.supabase.co';
+const SUPABASE_KEY='sb_publishable_Qf9weBIOViUWuNA6STFB2A_CFMMevop';
+const TTS_URL=SUPABASE_URL+'/functions/v1/eleven-tts';
+const $=id=>document.getElementById(id);
+let voices=[],selectedVoice='',lastScanId=0,audio=null,started=false,pollTimer=null;
+const settings={stability:.5,similarity:.75,speed:1,autoTts:true};
+const headers=()=>({'apikey':SUPABASE_KEY,'Content-Type':'application/json'});
+function showError(msg){$('error').textContent=msg;$('error').style.display='block';setTimeout(()=>$('error').style.display='none',6000)}
+function voiceLabel(v){const labels=v.labels||{};const parts=[];if(labels.accent)parts.push(labels.accent);if(labels.gender)parts.push(labels.gender);if(labels.age)parts.push(labels.age);return `${v.name}${parts.length?' — '+parts.join(' · '):''}`}
+function score(v){const s=((v.name||'')+' '+JSON.stringify(v.labels||{})).toLowerCase();let n=0;if(/neural|natural|multilingual|professional|premade/.test(s))n+=20;if(/jenny|aria|emma|brian|roger|andrew|ava|nova|rosa|james/.test(s))n+=10;if(/en-ph|philippine/.test(s))n+=15;return n}
+async function loadVoices(){try{const r=await fetch(TTS_URL);const d=await r.json();if(!r.ok)throw Error(d.error||d.details||'Voice loading failed');voices=(d.voices||[]).sort((a,b)=>score(b)-score(a)||a.name.localeCompare(b.name));$('voice').innerHTML=voices.map(v=>`<option value="${v.voice_id}">${voiceLabel(v)}</option>`).join('');const saved=localStorage.getItem('eleven_voice_id');if(saved&&voices.some(v=>v.voice_id===saved))$('voice').value=saved;selectedVoice=$('voice').value;if(selectedVoice)localStorage.setItem('eleven_voice_id',selectedVoice);$('status').textContent=`${voices.length} ElevenLabs voices available.`;if(!voices.length)throw Error('No ElevenLabs voices were returned.');}catch(e){$('status').textContent='Could not load ElevenLabs voices.';showError(e.message)}}
+async function synthesize(text){if(!selectedVoice)throw Error('Please select an ElevenLabs voice.');if(audio){audio.pause();if(audio.src)URL.revokeObjectURL(audio.src);audio=null}const r=await fetch(TTS_URL,{method:'POST',headers:headers(),body:JSON.stringify({text,voice_id:selectedVoice,model_id:'eleven_multilingual_v2',stability:+$('stability').value,similarity_boost:+$('similarity').value,speed:+$('speed').value})});if(!r.ok){let d={};try{d=await r.json()}catch{}throw Error(d.error||d.details||`ElevenLabs TTS failed (${r.status})`)}const blob=await r.blob();audio=new Audio(URL.createObjectURL(blob));audio.preload='auto';await audio.play()}
+function participantText(p){const bits=[`Welcome ${p.name}.`];if(p.position)bits.push(`${p.position}.`);if(p.organization)bits.push(`From ${p.organization}.`);if(p.message)bits.push(p.message);return bits.join(' ').replace(/\s+/g,' ').trim()}
+function render(p){$('welcome').classList.add('hidden');$('card').classList.remove('hidden');$('name').textContent=p.name||'';$('position').textContent=p.position||'';$('org').textContent=p.organization||'';$('message').textContent=p.message||'';if(p.photo_url){$('photo').src=p.photo_url;$('photo').style.display='block'}else $('photo').style.display='none'}
+async function poll(){if(!started)return;try{const r=await fetch(`${SUPABASE_URL}/rest/v1/scan_history?select=id,participant_id&order=id.desc&limit=1`,{headers:headers()});if(!r.ok)return;const rows=await r.json();if(!rows.length||rows[0].id===lastScanId)return;lastScanId=rows[0].id;const pr=await fetch(`${SUPABASE_URL}/rest/v1/participants?id=eq.${encodeURIComponent(rows[0].participant_id)}&select=*`,{headers:headers()});if(!pr.ok)return;const ps=await pr.json();if(!ps.length)return;const p=ps[0];render(p);if(settings.autoTts){try{await synthesize(participantText(p))}catch(e){showError(e.message)}}}catch(e){}}
+$('voice').addEventListener('change',()=>{selectedVoice=$('voice').value;localStorage.setItem('eleven_voice_id',selectedVoice)});
+['stability','similarity','speed'].forEach(id=>$(id).addEventListener('input',()=>$(id+'Val').textContent=(+$(id).value).toFixed(2)));
+$('autoTts').addEventListener('change',()=>settings.autoTts=$('autoTts').checked);
+$('test').onclick=async()=>{try{selectedVoice=$('voice').value;settings.stability=+$('stability').value;settings.similarity=+$('similarity').value;settings.speed=+$('speed').value;await synthesize('Hello. This is the ElevenLabs voice test for the LED event display.');}catch(e){showError(e.message)}};
+$('start').onclick=async()=>{try{selectedVoice=$('voice').value;settings.autoTts=$('autoTts').checked;await synthesize('LED wall is ready. Please scan the participant QR code.');started=true;$('setup').classList.add('hidden');if(document.documentElement.requestFullscreen)await document.documentElement.requestFullscreen().catch(()=>{});await poll();pollTimer=setInterval(poll,1200);}catch(e){showError(e.message)}};
+loadVoices();
 </script>
-</body>
-</html>
+</body></html>

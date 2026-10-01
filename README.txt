@@ -1,30 +1,28 @@
-LED WALL TTS SETUP
-===================
+QR EVENT SYSTEM — ELEVENLABS LED TTS
 
-Replace your current display.html with this file.
+1. Supabase Edge Function
+Use the included eleven-tts/index.ts in your existing Supabase function named eleven-tts.
+Deploy it from the Supabase Dashboard.
 
-Open:
-https://janshatad.github.io/Announcement-Data/display.html?v=24
+2. Supabase Secret
+You already added:
+ELEVENLABS_API_KEY
 
-Before starting:
-- Choose the voice.
-- Test the voice.
-- Adjust rate/volume.
-- Click START LED DISPLAY.
+Do not put the ElevenLabs key in display.html or GitHub.
 
-After Start:
-- Fullscreen is requested.
-- The setup panel disappears.
-- No controls remain on the LED wall.
-- Every new QR scan is announced automatically.
+3. GitHub Pages
+Replace your existing display.html with the included display.html.
+Repository:
+https://github.com/janshatad/Announcement-Data
 
-VOICE QUALITY
--------------
-The page prioritizes voices exposed by the browser whose names contain Natural, Neural, or Online.
-For the best chance of natural Microsoft voices, use Microsoft Edge. Microsoft's Edge Read Aloud provides natural-sounding online voices, and Microsoft documents Neural/Multilingual voices including en-PH-RosaNeural, en-US-JennyNeural, en-US-AriaNeural, en-US-EmmaNeural, en-US-BrianNeural and en-US-RogerNeural.
+GitHub Pages URL:
+https://janshatad.github.io/Announcement-Data/
 
-IMPORTANT
----------
-A normal GitHub Pages HTML page cannot securely call Microsoft Azure Speech as a private cloud API because an Azure subscription key must not be exposed in browser JavaScript. This version therefore uses the browser's speech engine and prioritizes natural/neural voices when the browser exposes them.
+4. How it works
+QR scan -> scan_history -> participant lookup -> LED display -> Supabase Edge Function -> ElevenLabs audio -> LED wall speaker.
 
-If you want guaranteed Microsoft Neural audio on every browser, the next step is a small Supabase Edge Function that keeps the Azure key server-side and returns MP3 audio to the LED wall.
+5. Voice list
+The Edge Function supports GET and POST. GET securely fetches the available ElevenLabs voices without exposing the API key to the browser.
+
+6. Important
+Rotate any ElevenLabs API key that has been exposed in chat or source code. Store the replacement only in Supabase Edge Function Secrets.
