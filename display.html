@@ -10,6 +10,10 @@
 </style>
 </head>
 <body>
+<div id="startOverlay" style="position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,.96);display:flex;align-items:center;justify-content:center;flex-direction:column;text-align:center;font-family:Arial,sans-serif">
+  <button id="startBtn" style="font-size:clamp(22px,3vw,42px);font-weight:800;padding:18px 32px;border:0;border-radius:14px;background:#2563eb;color:#fff;cursor:pointer;box-shadow:0 0 35px rgba(37,99,235,.55)">⛶ START LED DISPLAY</button>
+  <div id="startStatus" style="margin-top:15px;color:#cbd5e1;font-size:16px">Click once to enable fullscreen and LED-wall voice.</div>
+</div>
 <main class="screen"><div class="content"><div class="welcome">WELCOME</div><img id="photo" class="photo" alt="Participant"><div id="name" class="name">READY TO SCAN</div><div id="info" class="info">Waiting for the next QR scan...</div><div id="message" class="message"></div><div class="footer">QR EVENT INFORMATION SYSTEM</div></div></main>
 <script>
 const SUPABASE_URL="https://bduudxtfqyswgwimvzpr.supabase.co";
@@ -18,6 +22,7 @@ const db=supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
 let lastScanId=null;
 let tts={enabled:true,voice:"",rate:1,pitch:1,volume:1};
 let voices=[];
+let ttsUnlocked=false;
 
 function loadVoices(){if("speechSynthesis" in window)voices=speechSynthesis.getVoices()||[]}
 if("speechSynthesis" in window){speechSynthesis.onvoiceschanged=loadVoices;loadVoices()}
@@ -31,7 +36,7 @@ async function loadTTS(){
 }
 
 function speak(p){
- if(!tts.enabled||!("speechSynthesis" in window))return;
+ if(!tts.enabled||!("speechSynthesis" in window)||!ttsUnlocked)return;
  let text="Now welcoming "+(p.name||"participant")+".";
  if(p.position)text+=" "+p.position+".";
  if(p.organization)text+=" From "+p.organization+".";
@@ -63,6 +68,39 @@ async function displayLatestScan(){
   speak(p);
  }catch(e){console.error("LED polling error:",e)}
 }
+
+async function activateLED(){
+  const status=document.getElementById("startStatus");
+  try{
+    await loadTTS();
+    ttsUnlocked=true;
+    if("speechSynthesis" in window){
+      speechSynthesis.cancel();
+      speechSynthesis.resume();
+      const u=new SpeechSynthesisUtterance("LED wall display is ready.");
+      const v=voices.find(x=>x.name===tts.voice);
+      if(v)u.voice=v;
+      u.rate=tts.rate;u.pitch=tts.pitch;u.volume=tts.volume;
+      speechSynthesis.speak(u);
+    }
+    if(document.documentElement.requestFullscreen){
+      try{await document.documentElement.requestFullscreen();}catch(e){console.warn("Fullscreen was blocked:",e)}
+    }
+    document.getElementById("startOverlay").style.display="none";
+    displayLatestScan();
+  }catch(e){
+    console.error(e);
+    status.textContent="Could not start LED display. Click again.";
+  }
+}
+
+document.getElementById("startBtn").addEventListener("click",activateLED);
+document.addEventListener("dblclick",activateLED);
+document.addEventListener("fullscreenchange",()=>{
+  if(!document.fullscreenElement){
+    document.getElementById("startOverlay").style.display="flex";
+  }
+});
 
 loadTTS();
 displayLatestScan();
