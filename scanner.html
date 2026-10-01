@@ -4,183 +4,183 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>QR Scanner — Check</title>
-
 <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
 <style>
-  * { box-sizing: border-box; }
-  body {
-    margin: 0;
-    min-height: 100vh;
-    font-family: Arial, Helvetica, sans-serif;
-    background: #050505;
-    color: #fff;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-  }
+*{box-sizing:border-box}
+body{
+  margin:0;min-height:100vh;font-family:Arial,Helvetica,sans-serif;
+  background:#050505;color:#fff;display:flex;align-items:center;justify-content:center
+}
+.scanner-wrap{width:min(92vw,720px);text-align:center}
+h1{margin:0 0 8px;font-size:clamp(28px,5vw,44px)}
+.status{min-height:28px;margin-bottom:18px;color:#aaa;font-size:16px}
+#reader{width:100%;max-width:620px;margin:0 auto;overflow:hidden;border-radius:18px;background:#111}
+.hint{margin-top:16px;color:#888;font-size:14px}
 
-  .scanner-wrap {
-    width: min(92vw, 720px);
-    text-align: center;
-  }
-
-  h1 {
-    margin: 0 0 8px;
-    font-size: clamp(28px, 5vw, 44px);
-  }
-
-  .status {
-    min-height: 28px;
-    margin-bottom: 18px;
-    color: #aaa;
-    font-size: 16px;
-  }
-
-  #reader {
-    width: 100%;
-    max-width: 620px;
-    margin: 0 auto;
-    overflow: hidden;
-    border-radius: 18px;
-    background: #111;
-  }
-
-  .hint {
-    margin-top: 16px;
-    color: #888;
-    font-size: 14px;
-  }
-
-  /* Success popup */
-  .check-overlay {
-    position: fixed;
-    inset: 0;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background: rgba(0,0,0,.72);
-    opacity: 0;
-    visibility: hidden;
-    transition: opacity .18s ease;
-    z-index: 9999;
-  }
-
-  .check-overlay.show {
-    opacity: 1;
-    visibility: visible;
-  }
-
-  .check-card {
-    width: min(82vw, 430px);
-    padding: 34px 28px;
-    border-radius: 28px;
-    background: #111;
-    border: 2px solid #20d66b;
-    box-shadow: 0 0 60px rgba(32,214,107,.28);
-    transform: scale(.85);
-    transition: transform .18s ease;
-  }
-
-  .check-overlay.show .check-card {
-    transform: scale(1);
-  }
-
-  .check-icon {
-    width: 110px;
-    height: 110px;
-    margin: 0 auto 18px;
-    border-radius: 50%;
-    background: #20d66b;
-    color: #06160d;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 70px;
-    font-weight: 900;
-  }
-
-  .check-title {
-    font-size: 46px;
-    font-weight: 900;
-    letter-spacing: 2px;
-  }
-
-  .check-name {
-    margin-top: 8px;
-    color: #ccc;
-    font-size: 18px;
-  }
-
-  .error {
-    color: #ff6868;
-  }
+.modal-overlay{
+  position:fixed;inset:0;background:rgba(0,0,0,.78);
+  display:flex;align-items:center;justify-content:center;
+  opacity:0;visibility:hidden;pointer-events:none;
+  transition:opacity .16s ease;z-index:9999
+}
+.modal-overlay.show{opacity:1;visibility:visible;pointer-events:auto}
+.modal{
+  width:min(86vw,440px);padding:34px 28px 28px;text-align:center;
+  background:#111;border:2px solid #20d66b;border-radius:26px;
+  box-shadow:0 0 70px rgba(32,214,107,.25);
+  transform:scale(.88);transition:transform .16s ease
+}
+.modal-overlay.show .modal{transform:scale(1)}
+.check-icon{
+  width:105px;height:105px;margin:0 auto 18px;border-radius:50%;
+  background:#20d66b;color:#06160d;display:flex;align-items:center;
+  justify-content:center;font-size:68px;font-weight:900
+}
+.title{font-size:42px;font-weight:900;letter-spacing:2px}
+.name{margin-top:9px;color:#ccc;font-size:19px;word-break:break-word}
+.ok-btn{
+  width:100%;margin-top:28px;padding:16px 20px;border:0;border-radius:13px;
+  background:#20d66b;color:#06160d;font-size:20px;font-weight:800;
+  cursor:pointer
+}
+.ok-btn:active{transform:scale(.98)}
+.error{color:#ff6868}
 </style>
 </head>
 
 <body>
-  <main class="scanner-wrap">
-    <h1>QR SCANNER</h1>
-    <div id="status" class="status">Starting camera...</div>
-    <div id="reader"></div>
-    <div class="hint">Scan a registered participant QR code.</div>
-  </main>
+<main class="scanner-wrap">
+  <h1>QR SCANNER</h1>
+  <div id="status" class="status">Starting camera...</div>
+  <div id="reader"></div>
+  <div class="hint">Scan a registered participant QR code.</div>
+</main>
 
-  <div id="checkOverlay" class="check-overlay" aria-hidden="true">
-    <div class="check-card">
-      <div class="check-icon">✓</div>
-      <div class="check-title">CHECK</div>
-      <div id="checkName" class="check-name"></div>
-    </div>
+<div id="checkModal" class="modal-overlay" aria-hidden="true">
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="checkTitle">
+    <div class="check-icon">✓</div>
+    <div id="checkTitle" class="title">CHECK</div>
+    <div id="checkName" class="name"></div>
+    <button id="okButton" class="ok-btn" type="button">OK</button>
   </div>
+</div>
 
 <script>
 const SUPABASE_URL = "https://bduudxtfqyswgwimvzpr.supabase.co";
 const SUPABASE_KEY = "sb_publishable_Qf9weBIOViUWuNA6STFB2A_CFMMevop";
 
-const supabaseClient = window.supabase.createClient(
-  SUPABASE_URL,
-  SUPABASE_KEY
-);
+const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
 const statusEl = document.getElementById("status");
-const overlay = document.getElementById("checkOverlay");
+const modal = document.getElementById("checkModal");
 const checkName = document.getElementById("checkName");
+const okButton = document.getElementById("okButton");
 
 let scanner = null;
+let scannerRunning = false;
 let processing = false;
 
+const scannerConfig = {
+  fps: 10,
+  qrbox: function(viewfinderWidth, viewfinderHeight) {
+    const size = Math.min(viewfinderWidth, viewfinderHeight) * 0.72;
+    return { width: size, height: size };
+  },
+  aspectRatio: 1.0
+};
+
 function vibrateSuccess() {
-  if ("vibrate" in navigator) {
-    // Short double vibration — no audio/TTS.
-    navigator.vibrate([120, 70, 120]);
+  if ("vibrate" in navigator) navigator.vibrate([120, 70, 120]);
+}
+
+function vibrateError() {
+  if ("vibrate" in navigator) navigator.vibrate([250, 80, 250]);
+}
+
+async function stopCamera() {
+  if (!scanner || !scannerRunning) return;
+  try {
+    await scanner.stop();
+  } catch (e) {
+    console.warn("Camera stop:", e);
+  }
+  scannerRunning = false;
+}
+
+async function startCamera() {
+  if (!scanner) scanner = new Html5Qrcode("reader");
+  if (scannerRunning) return;
+
+  statusEl.textContent = "Starting camera...";
+
+  try {
+    await scanner.start(
+      { facingMode: "environment" },
+      scannerConfig,
+      (decodedText) => processQr(decodedText),
+      () => {}
+    );
+    scannerRunning = true;
+    statusEl.textContent = "Ready to scan.";
+  } catch (error) {
+    console.error(error);
+    scannerRunning = false;
+    statusEl.innerHTML =
+      '<span class="error">Camera could not start. Allow camera permission and reload.</span>';
   }
 }
 
-function showCheck(name) {
+function openCheckModal(name) {
   checkName.textContent = name || "";
-  overlay.classList.add("show");
-  overlay.setAttribute("aria-hidden", "false");
-
-  setTimeout(() => {
-    overlay.classList.remove("show");
-    overlay.setAttribute("aria-hidden", "true");
-  }, 1300);
+  modal.classList.add("show");
+  modal.setAttribute("aria-hidden", "false");
+  // Focus the only available action. No outside click closes the dialog.
+  setTimeout(() => okButton.focus(), 50);
 }
 
+async function closeCheckModal() {
+  modal.classList.remove("show");
+  modal.setAttribute("aria-hidden", "true");
+
+  // Release processing lock before restarting the camera.
+  processing = false;
+
+  await startCamera();
+}
+
+// Only the OK button can close the popup.
+okButton.addEventListener("click", closeCheckModal);
+
+// Prevent accidental closing by clicking the background.
+modal.addEventListener("click", (event) => {
+  if (event.target === modal) {
+    event.stopPropagation();
+  }
+});
+
+// Prevent Escape from closing the dialog.
+document.addEventListener("keydown", (event) => {
+  if (modal.classList.contains("show") && event.key === "Escape") {
+    event.preventDefault();
+  }
+});
+
 async function processQr(qrText) {
+  // This lock plus stopping the camera prevents multiple scans at once.
   if (processing) return;
   processing = true;
 
+  // Stop scanning immediately after the first detected QR.
+  await stopCamera();
+
   try {
     const qrCode = String(qrText || "").trim();
-
     if (!qrCode) throw new Error("Empty QR code.");
 
     statusEl.textContent = "Checking...";
 
-    // Find participant by QR code.
     const { data: participant, error: participantError } =
       await supabaseClient
         .from("participants")
@@ -191,21 +191,16 @@ async function processQr(qrText) {
     if (participantError) throw participantError;
 
     if (!participant) {
-      statusEl.innerHTML =
-        '<span class="error">QR code not registered.</span>';
+      statusEl.innerHTML = '<span class="error">QR code not registered.</span>';
+      vibrateError();
 
-      if ("vibrate" in navigator) {
-        navigator.vibrate([250, 80, 250]);
-      }
-
-      setTimeout(() => {
-        statusEl.textContent = "Ready to scan.";
-      }, 1500);
-
+      // Invalid QR gets no CHECK dialog; camera resumes automatically.
+      processing = false;
+      setTimeout(() => startCamera(), 1200);
       return;
     }
 
-    // Record the scan. This triggers the LED Wall display.
+    // Record the scan. This also triggers the LED Wall announcement.
     const { error: historyError } = await supabaseClient
       .from("scan_history")
       .insert({
@@ -215,61 +210,24 @@ async function processQr(qrText) {
 
     if (historyError) throw historyError;
 
-    // Scanner itself does NOT use TTS.
+    // Scanner has no TTS.
     vibrateSuccess();
-    showCheck(participant.name);
 
-    statusEl.textContent = "Ready to scan.";
+    // Camera remains stopped while this dialog is open.
+    openCheckModal(participant.name);
 
   } catch (error) {
     console.error(error);
     statusEl.innerHTML =
       '<span class="error">Scan error. Please try again.</span>';
+    vibrateError();
 
-    if ("vibrate" in navigator) {
-      navigator.vibrate([250, 80, 250]);
-    }
-
-    setTimeout(() => {
-      statusEl.textContent = "Ready to scan.";
-    }, 1800);
-  } finally {
-    // Prevent duplicate scans from the same QR while the popup is showing.
-    setTimeout(() => {
-      processing = false;
-    }, 1500);
+    processing = false;
+    setTimeout(() => startCamera(), 1500);
   }
 }
 
-async function startScanner() {
-  scanner = new Html5Qrcode("reader");
-
-  const config = {
-    fps: 10,
-    qrbox: function(viewfinderWidth, viewfinderHeight) {
-      const size = Math.min(viewfinderWidth, viewfinderHeight) * 0.72;
-      return { width: size, height: size };
-    },
-    aspectRatio: 1.0
-  };
-
-  try {
-    await scanner.start(
-      { facingMode: "environment" },
-      config,
-      (decodedText) => processQr(decodedText),
-      () => {}
-    );
-
-    statusEl.textContent = "Ready to scan.";
-  } catch (error) {
-    console.error(error);
-    statusEl.innerHTML =
-      '<span class="error">Camera could not start. Allow camera permission and reload.</span>';
-  }
-}
-
-window.addEventListener("load", startScanner);
+window.addEventListener("load", startCamera);
 </script>
 </body>
 </html>
