@@ -1,1061 +1,802 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<meta charset="utf-8">
+<title>Admin — QR Event System</title>
 
-<meta
-    name="viewport"
-    content="width=device-width, initial-scale=1"
->
+<script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
 
-<title>Admin - QR Event Information System</title>
+<style>
 
-<link rel="stylesheet" href="style.css">
+*{
+    box-sizing:border-box;
+}
 
-<!-- QR CODE LIBRARY -->
-<script
-    src="https://cdn.jsdelivr.net/npm/qrcode@1.5.4/build/qrcode.min.js">
-</script>
+body{
+    margin:0;
+    font-family:Arial,Helvetica,sans-serif;
+    background:#f1f5f9;
+    color:#0f172a;
+}
 
+.container{
+    max-width:1000px;
+    margin:auto;
+    padding:25px;
+}
+
+.card{
+    background:white;
+    border-radius:16px;
+    padding:25px;
+    margin-bottom:20px;
+    box-shadow:0 5px 25px rgba(0,0,0,.08);
+}
+
+h1{
+    margin-top:0;
+}
+
+label{
+    display:block;
+    font-weight:bold;
+    margin-top:15px;
+    margin-bottom:6px;
+}
+
+input,
+textarea{
+    width:100%;
+    padding:12px;
+    border:1px solid #cbd5e1;
+    border-radius:8px;
+    font-size:16px;
+}
+
+textarea{
+    min-height:100px;
+    resize:vertical;
+}
+
+button{
+    border:0;
+    padding:12px 18px;
+    border-radius:8px;
+    font-weight:bold;
+    cursor:pointer;
+    font-size:15px;
+}
+
+.primary{
+    background:#2563eb;
+    color:white;
+}
+
+.secondary{
+    background:#475569;
+    color:white;
+}
+
+.success{
+    background:#16a34a;
+    color:white;
+}
+
+button:disabled{
+    opacity:.6;
+    cursor:not-allowed;
+}
+
+.preview{
+    margin-top:15px;
+    text-align:center;
+}
+
+.preview img{
+    display:none;
+    max-width:220px;
+    max-height:220px;
+    margin:auto;
+    border-radius:12px;
+    object-fit:cover;
+    border:3px solid #e2e8f0;
+}
+
+#photoStatus{
+    margin-top:10px;
+    color:#64748b;
+}
+
+.status{
+    padding:12px;
+    border-radius:8px;
+    margin-top:15px;
+    display:none;
+    white-space:pre-wrap;
+}
+
+.status.success{
+    display:block;
+    background:#dcfce7;
+    color:#166534;
+}
+
+.status.error{
+    display:block;
+    background:#fee2e2;
+    color:#991b1b;
+}
+
+.qr-area{
+    text-align:center;
+    margin-top:20px;
+}
+
+#qrcode{
+    display:inline-block;
+    padding:15px;
+    background:white;
+}
+
+.participant{
+    padding:15px;
+    border-bottom:1px solid #e2e8f0;
+}
+
+.participant:last-child{
+    border-bottom:0;
+}
+
+.participant strong{
+    display:block;
+    font-size:18px;
+}
+
+.small{
+    color:#64748b;
+    font-size:14px;
+}
+
+</style>
 </head>
-
 
 <body>
 
+<div class="container">
 
-<main class="wrap">
+<div class="card">
 
+<h1>QR Event System — Admin</h1>
 
-<!-- =====================================================
-     HEADER
-===================================================== -->
-
-<section class="panel">
-
-    <h1>
-        👤 Participant Registration
-    </h1>
-
-    <p class="muted">
-        Register participants and generate their QR codes.
-    </p>
-
-</section>
-
-
-
-<!-- =====================================================
-     REGISTRATION
-===================================================== -->
-
-<section class="panel grid">
-
+<p class="small">
+Register a participant and generate their QR code.
+</p>
 
 <form id="participantForm">
 
+<label>QR Code ID</label>
 
-<!-- QR ID -->
-
-<div class="field">
-
-    <label for="qr">
-        QR / Participant ID
-    </label>
-
-    <input
-        id="qr"
-        type="text"
-        placeholder="SM-2026-0001"
-        autocomplete="off"
-        required
-    >
-
-</div>
-
-
-
-<!-- NAME -->
-
-<div class="field">
-
-    <label for="name">
-        Full Name
-    </label>
-
-    <input
-        id="name"
-        type="text"
-        placeholder="Juan Dela Cruz"
-        required
-    >
-
-</div>
-
-
-
-<!-- POSITION -->
-
-<div class="field">
-
-    <label for="position">
-        Position
-    </label>
-
-    <input
-        id="position"
-        type="text"
-        placeholder="Municipal Employee"
-    >
-
-</div>
-
-
-
-<!-- ORGANIZATION -->
-
-<div class="field">
-
-    <label for="org">
-        Organization
-    </label>
-
-    <input
-        id="org"
-        type="text"
-        placeholder="Municipality of San Miguel"
-    >
-
-</div>
-
-
-
-<!-- MESSAGE -->
-
-<div class="field">
-
-    <label for="message">
-        Message
-    </label>
-
-    <textarea
-        id="message"
-        rows="4"
-        placeholder="Welcome to the event!"
-    >Welcome to the event!</textarea>
-
-</div>
-
-
-
-<!-- PHOTO -->
-
-<div class="field">
-
-    <label for="photo">
-        Participant Photo
-    </label>
-
-    <input
-        id="photo"
-        type="file"
-        accept="image/*"
-    >
-
-</div>
-
-
-
-<!-- PHOTO PREVIEW -->
-
-<div
-    id="photoPreviewBox"
-    style="
-        display:none;
-        margin:15px 0;
-        text-align:center;
-    "
+<input
+    id="qr_code"
+    type="text"
+    placeholder="Example: SM-2026-0001"
+    required
 >
 
-    <p
-        style="
-            margin-bottom:8px;
-            font-weight:bold;
-        "
-    >
-        Photo Preview
-    </p>
+<label>Name</label>
 
-    <img
-        id="preview"
-        alt="Participant Photo Preview"
-        style="
-            display:block;
-            width:180px;
-            height:180px;
-            object-fit:cover;
-            border-radius:12px;
-            margin:0 auto;
-            border:3px solid rgba(255,255,255,.15);
-            box-shadow:0 5px 20px rgba(0,0,0,.25);
-        "
-    >
-
-    <p
-        id="photoName"
-        class="muted"
-        style="margin-top:8px;"
-    ></p>
-
-</div>
-
-
-
-<!-- BUTTONS -->
-
-<div
-    class="actions"
-    style="
-        display:flex;
-        gap:10px;
-        flex-wrap:wrap;
-    "
+<input
+    id="name"
+    type="text"
+    placeholder="Participant name"
+    required
 >
 
-    <button
-        id="saveBtn"
-        class="primary"
-        type="button"
-    >
-        SAVE PARTICIPANT
-    </button>
+<label>Position</label>
 
-
-    <button
-        id="clearBtn"
-        type="button"
-    >
-        CLEAR FORM
-    </button>
-
-</div>
-
-
-
-<!-- STATUS -->
-
-<div
-    id="status"
-    class="status"
-    style="margin-top:15px;"
+<input
+    id="position"
+    type="text"
+    placeholder="Mayor / Guest / Participant"
 >
-    Ready.
+
+<label>Organization</label>
+
+<input
+    id="organization"
+    type="text"
+    placeholder="Organization"
+>
+
+<label>Message</label>
+
+<textarea
+    id="message"
+    placeholder="Welcome message..."
+></textarea>
+
+<label>Participant Photo</label>
+
+<input
+    id="photo"
+    type="file"
+    accept="image/*"
+>
+
+<div id="photoStatus">
+No photo selected.
 </div>
 
+<div class="preview">
+
+<img id="photoPreview" alt="Photo Preview">
+
+</div>
+
+<br>
+
+<button
+    id="saveBtn"
+    class="primary"
+    type="submit"
+>
+SAVE PARTICIPANT
+</button>
+
+<button
+    id="clearBtn"
+    class="secondary"
+    type="button"
+>
+CLEAR
+</button>
 
 </form>
 
-
-
-<!-- =====================================================
-     QR CODE
-===================================================== -->
-
-<div>
-
-    <h2>
-        QR Code
-    </h2>
-
-
-    <div
-        class="qr-box"
-        style="
-            text-align:center;
-            padding:20px;
-        "
-    >
-
-        <canvas
-            id="qrCanvas"
-            width="260"
-            height="260"
-        ></canvas>
-
-    </div>
-
-
-    <p
-        id="qrLabel"
-        class="muted"
-    >
-        Save a participant to generate the QR.
-    </p>
-
-
-    <div
-        class="actions"
-        style="
-            display:flex;
-            gap:10px;
-            flex-wrap:wrap;
-        "
-    >
-
-        <button
-            id="downloadQR"
-            type="button"
-        >
-            DOWNLOAD QR
-        </button>
-
-
-        <button
-            id="printQR"
-            type="button"
-        >
-            PRINT QR
-        </button>
-
-    </div>
+<div id="status" class="status"></div>
 
 </div>
 
 
-</section>
+<div class="card">
+
+<h2>Generated QR Code</h2>
+
+<div class="qr-area">
+
+<div id="qrcode"></div>
+
+<br><br>
+
+<button
+    id="downloadQR"
+    class="success"
+    type="button"
+    disabled
+>
+DOWNLOAD QR
+</button>
+
+</div>
+
+</div>
 
 
+<div class="card">
 
-<!-- =====================================================
-     PARTICIPANT LIST
-===================================================== -->
+<h2>Registered Participants</h2>
 
-<section class="panel">
+<div id="participants">
+Loading...
+</div>
 
-    <h2>
-        Registered Participants
-    </h2>
+</div>
 
-
-    <div class="table-wrap">
-
-        <table>
-
-            <thead>
-
-                <tr>
-
-                    <th>
-                        Photo
-                    </th>
-
-                    <th>
-                        QR ID
-                    </th>
-
-                    <th>
-                        Name
-                    </th>
-
-                    <th>
-                        Position
-                    </th>
-
-                    <th>
-                        Organization
-                    </th>
-
-                    <th>
-                        Action
-                    </th>
-
-                </tr>
-
-            </thead>
-
-
-            <tbody id="rows">
-
-                <tr>
-
-                    <td
-                        colspan="6"
-                        style="text-align:center;"
-                    >
-                        Loading...
-
-                    </td>
-
-                </tr>
-
-            </tbody>
-
-        </table>
-
-    </div>
-
-</section>
-
-
-</main>
-
-
-
-<!-- =====================================================
-     SUPABASE CONFIG
-===================================================== -->
-
-<script src="config.js"></script>
-
+</div>
 
 
 <script>
 
-/* =====================================================
-   SUPABASE CONFIGURATION
-===================================================== */
+/* =========================================================
+   SUPABASE CONFIG
+========================================================= */
 
 const SUPABASE_URL =
-    window.SUPABASE_URL;
+"https://bduudxtfqyswgwimvzpr.supabase.co";
 
 const SUPABASE_KEY =
-    window.SUPABASE_PUBLISHABLE_KEY;
+"sb_publishable_Qf9weBIOViUWuNA6STFB2A_CFMMevop";
+
+const BUCKET =
+"participant-photos";
 
 
-/* =====================================================
-   ELEMENT HELPER
-===================================================== */
+/* =========================================================
+   ELEMENTS
+========================================================= */
 
-function $(id) {
+const form =
+document.getElementById("participantForm");
 
-    return document.getElementById(id);
+const saveBtn =
+document.getElementById("saveBtn");
 
-}
+const clearBtn =
+document.getElementById("clearBtn");
+
+const photoInput =
+document.getElementById("photo");
+
+const photoPreview =
+document.getElementById("photoPreview");
+
+const photoStatus =
+document.getElementById("photoStatus");
+
+const statusBox =
+document.getElementById("status");
+
+const qrContainer =
+document.getElementById("qrcode");
+
+const downloadQR =
+document.getElementById("downloadQR");
+
+const participantsBox =
+document.getElementById("participants");
 
 
-/* =====================================================
-   VARIABLES
-===================================================== */
-
-let currentId = "";
-
-let currentPhoto = "";
+let currentQR = null;
 
 
-/* =====================================================
+/* =========================================================
    STATUS
-===================================================== */
+========================================================= */
 
-function status(message, success = false) {
+function showStatus(message,type){
 
-    const box =
-        $("status");
+    statusBox.className =
+        "status " + type;
 
-    box.textContent =
+    statusBox.textContent =
         message;
 
-    box.className =
-        success
-        ? "status success"
-        : "status";
-
+    statusBox.style.display =
+        "block";
 }
 
 
-/* =====================================================
+/* =========================================================
    PHOTO PREVIEW
-===================================================== */
+========================================================= */
 
-$("photo").addEventListener(
-    "change",
-    function () {
+photoInput.addEventListener("change",function(){
 
-        const file =
-            this.files &&
-            this.files[0];
+    const file =
+        this.files && this.files[0];
 
+    if(!file){
 
-        const preview =
-            $("preview");
+        photoPreview.style.display =
+            "none";
 
+        photoPreview.removeAttribute("src");
 
-        const previewBox =
-            $("photoPreviewBox");
+        photoStatus.textContent =
+            "No photo selected.";
 
-
-        const photoName =
-            $("photoName");
-
-
-        /* No file */
-
-        if (!file) {
-
-            preview.removeAttribute(
-                "src"
-            );
-
-            previewBox.style.display =
-                "none";
-
-            photoName.textContent =
-                "";
-
-            return;
-
-        }
-
-
-        /* Make sure it is an image */
-
-        if (
-            !file.type ||
-            !file.type.startsWith(
-                "image/"
-            )
-        ) {
-
-            alert(
-                "Please select an image file."
-            );
-
-            this.value =
-                "";
-
-            previewBox.style.display =
-                "none";
-
-            return;
-
-        }
-
-
-        /* Create temporary URL */
-
-        const imageURL =
-            URL.createObjectURL(
-                file
-            );
-
-
-        /* Display preview */
-
-        preview.onload =
-            function () {
-
-                previewBox.style.display =
-                    "block";
-
-                photoName.textContent =
-                    file.name +
-                    " • " +
-                    formatFileSize(
-                        file.size
-                    );
-
-                URL.revokeObjectURL(
-                    imageURL
-                );
-
-            };
-
-
-        preview.onerror =
-            function () {
-
-                previewBox.style.display =
-                    "none";
-
-                URL.revokeObjectURL(
-                    imageURL
-                );
-
-                alert(
-                    "Unable to preview this image."
-                );
-
-            };
-
-
-        preview.src =
-            imageURL;
-
+        return;
     }
-);
 
 
+    if(!file.type.startsWith("image/")){
 
-/* =====================================================
-   FILE SIZE
-===================================================== */
+        photoPreview.style.display =
+            "none";
 
-function formatFileSize(bytes) {
+        photoStatus.textContent =
+            "Please select an image file.";
 
-    if (bytes < 1024)
-        return bytes + " B";
+        this.value = "";
 
-    if (bytes < 1024 * 1024)
-        return (
-            (bytes / 1024)
-            .toFixed(1)
-            +
-            " KB"
+        return;
+    }
+
+
+    photoStatus.textContent =
+        "Loading photo...";
+
+
+    const reader =
+        new FileReader();
+
+
+    reader.onload = function(event){
+
+        photoPreview.src =
+            event.target.result;
+
+        photoPreview.style.display =
+            "block";
+
+        photoStatus.textContent =
+            file.name +
+            " (" +
+            Math.round(file.size / 1024) +
+            " KB)";
+    };
+
+
+    reader.onerror = function(){
+
+        photoPreview.style.display =
+            "none";
+
+        photoStatus.textContent =
+            "Unable to preview this photo.";
+    };
+
+
+    reader.readAsDataURL(file);
+
+});
+
+
+/* =========================================================
+   SUPABASE REQUEST
+========================================================= */
+
+async function supabaseRequest(
+    endpoint,
+    options={}
+){
+
+    const response =
+        await fetch(
+            SUPABASE_URL +
+            endpoint,
+            {
+                ...options,
+
+                headers:{
+                    "apikey":SUPABASE_KEY,
+
+                    "Authorization":
+                        "Bearer " +
+                        SUPABASE_KEY,
+
+                    "Content-Type":
+                        "application/json",
+
+                    ...(options.headers || {})
+                }
+            }
         );
 
-    return (
-        (bytes / (1024 * 1024))
-        .toFixed(1)
-        +
-        " MB"
-    );
 
+    const text =
+        await response.text();
+
+
+    let data = null;
+
+    try{
+        data =
+            text ? JSON.parse(text) : null;
+    }
+    catch{
+        data = text;
+    }
+
+
+    if(!response.ok){
+
+        let message =
+            "HTTP " +
+            response.status;
+
+
+        if(data){
+
+            if(data.message)
+                message +=
+                    "\n" + data.message;
+
+            else if(data.error)
+                message +=
+                    "\n" + data.error;
+
+            else
+                message +=
+                    "\n" +
+                    JSON.stringify(data);
+        }
+
+
+        throw new Error(message);
+    }
+
+
+    return data;
 }
 
 
+/* =========================================================
+   UPLOAD PHOTO
+========================================================= */
 
-/* =====================================================
-   PHOTO UPLOAD
-===================================================== */
+async function uploadPhoto(file,qrCode){
 
-async function uploadPhoto(
-    file,
-    qr
-) {
+    if(!file)
+        return "";
 
 
     const extension =
-
-        (
-            file.name
-            .split(".")
-            .pop()
-            ||
-            "jpg"
-        )
-        .toLowerCase()
-        .replace(
-            /[^a-z0-9]/g,
-            ""
-        )
-        ||
-        "jpg";
-
-
-    const safeQR =
-
-        qr
-        .replace(
-            /[^a-zA-Z0-9_-]/g,
-            "_"
-        );
+        file.name
+        .split(".")
+        .pop()
+        .toLowerCase();
 
 
     const filename =
-
-        safeQR +
+        qrCode +
         "-" +
         Date.now() +
         "." +
         extension;
 
 
-    const uploadURL =
+    const path =
+        filename;
 
-        SUPABASE_URL.replace(
-            /\/$/,
-            ""
-        )
-        +
-        "/storage/v1/object/participant-photos/"
-        +
-        encodeURIComponent(
-            filename
+
+    const response =
+        await fetch(
+
+            SUPABASE_URL +
+            "/storage/v1/object/" +
+            BUCKET +
+            "/" +
+            encodeURIComponent(path),
+
+            {
+                method:"POST",
+
+                headers:{
+                    "apikey":SUPABASE_KEY,
+
+                    "Authorization":
+                        "Bearer " +
+                        SUPABASE_KEY,
+
+                    "Content-Type":
+                        file.type ||
+                        "application/octet-stream",
+
+                    "x-upsert":
+                        "true"
+                },
+
+                body:file
+            }
+
         );
 
 
-    status(
-        "Uploading photo..."
-    );
-
-
-    let response;
-
-
-    try {
-
-        response =
-            await fetch(
-                uploadURL,
-                {
-
-                    method:
-                        "POST",
-
-                    headers: {
-
-                        "apikey":
-                            SUPABASE_KEY,
-
-                        "Authorization":
-                            "Bearer " +
-                            SUPABASE_KEY,
-
-                        "Content-Type":
-                            file.type ||
-                            "image/jpeg",
-
-                        "x-upsert":
-                            "false"
-
-                    },
-
-                    body:
-                        file
-
-                }
-            );
-
-    }
-
-    catch (error) {
-
-        throw new Error(
-            "Photo upload connection failed: " +
-            error.message
-        );
-
-    }
-
-
-    const responseText =
+    const text =
         await response.text();
 
 
-    if (!response.ok) {
-
-        let errorMessage =
-            responseText;
-
-
-        try {
-
-            const json =
-                JSON.parse(
-                    responseText
-                );
-
-
-            errorMessage =
-                json.message ||
-                json.error ||
-                json.details ||
-                responseText;
-
-        }
-
-        catch (e) {}
-
+    if(!response.ok){
 
         throw new Error(
-            "Storage error " +
+            "Photo upload failed.\n" +
+            "HTTP " +
             response.status +
-            ": " +
-            errorMessage
+            "\n" +
+            text
         );
-
     }
 
 
-    /* PUBLIC URL */
-
-    const publicURL =
-
-        SUPABASE_URL.replace(
-            /\/$/,
-            ""
-        )
-        +
-        "/storage/v1/object/public/participant-photos/"
-        +
-        encodeURIComponent(
-            filename
-        );
-
-
-    return publicURL;
-
+    return (
+        SUPABASE_URL +
+        "/storage/v1/object/public/" +
+        BUCKET +
+        "/" +
+        encodeURIComponent(path)
+    );
 }
 
 
-
-/* =====================================================
+/* =========================================================
    SAVE PARTICIPANT
-===================================================== */
+========================================================= */
 
-async function saveParticipant() {
+form.addEventListener(
+"submit",
+async function(event){
 
-
-    console.log(
-        "SAVE PARTICIPANT CLICKED"
-    );
-
-
-    const qr =
-        $("qr")
-        .value
-        .trim();
+    event.preventDefault();
 
 
-    const name =
-        $("name")
-        .value
-        .trim();
-
-
-    /* Validate */
-
-    if (!qr) {
-
-        status(
-            "Please enter the QR / Participant ID."
-        );
-
-        $("qr").focus();
-
-        return;
-
-    }
-
-
-    if (!name) {
-
-        status(
-            "Please enter the participant name."
-        );
-
-        $("name").focus();
-
-        return;
-
-    }
-
-
-    const button =
-        $("saveBtn");
-
-
-    button.disabled =
+    saveBtn.disabled =
         true;
 
-
-    button.textContent =
+    saveBtn.textContent =
         "SAVING...";
 
 
-    try {
+    try{
+
+        const qrCode =
+            document
+            .getElementById("qr_code")
+            .value
+            .trim();
+
+        const name =
+            document
+            .getElementById("name")
+            .value
+            .trim();
+
+        const position =
+            document
+            .getElementById("position")
+            .value
+            .trim();
+
+        const organization =
+            document
+            .getElementById("organization")
+            .value
+            .trim();
+
+        const message =
+            document
+            .getElementById("message")
+            .value
+            .trim();
+
+        const photo =
+            photoInput.files &&
+            photoInput.files[0];
 
 
-        /* =========================================
-           PHOTO
-        ========================================= */
+        if(!qrCode){
 
-
-        let photoURL =
-            currentPhoto;
-
-
-        const file =
-            $("photo")
-            .files[0];
-
-
-        if (file) {
-
-            photoURL =
-                await uploadPhoto(
-                    file,
-                    qr
-                );
-
+            throw new Error(
+                "QR Code ID is required."
+            );
         }
 
 
-        /* =========================================
-           DATABASE
-        ========================================= */
+        if(!name){
+
+            throw new Error(
+                "Participant name is required."
+            );
+        }
 
 
-        status(
-            "Saving participant information..."
+        showStatus(
+            "Checking Supabase database...",
+            "success"
+        );
+
+
+        /* -------------------------------------------------
+           CHECK DATABASE
+        ------------------------------------------------- */
+
+        await supabaseRequest(
+            "/rest/v1/participants" +
+            "?select=id" +
+            "&qr_code=eq." +
+            encodeURIComponent(qrCode)
+        );
+
+
+        /* -------------------------------------------------
+           PHOTO
+        ------------------------------------------------- */
+
+        let photoURL = "";
+
+
+        if(photo){
+
+            showStatus(
+                "Uploading participant photo...",
+                "success"
+            );
+
+
+            photoURL =
+                await uploadPhoto(
+                    photo,
+                    qrCode
+                );
+        }
+
+
+        /* -------------------------------------------------
+           UPSERT PARTICIPANT
+        ------------------------------------------------- */
+
+        showStatus(
+            "Saving participant information...",
+            "success"
         );
 
 
         const participant = {
 
-            qr_code:
-                qr,
+            qr_code:qrCode,
 
-            name:
-                name,
+            name:name,
 
-            position:
-                $("position")
-                .value
-                .trim(),
+            position:position,
 
-            organization:
-                $("org")
-                .value
-                .trim(),
+            organization:organization,
 
-            message:
-                $("message")
-                .value
-                .trim(),
+            message:message,
 
-            photo_url:
-                photoURL ||
-                ""
+            photo_url:photoURL,
 
+            updated_at:
+                new Date().toISOString()
         };
 
 
-        const databaseURL =
+        const saved =
+            await supabaseRequest(
 
-            SUPABASE_URL.replace(
-                /\/$/,
-                ""
-            )
-            +
-            "/rest/v1/participants"
-            +
-            "?on_conflict=qr_code";
+                "/rest/v1/participants" +
+                "?on_conflict=qr_code",
 
+                {
+                    method:"POST",
 
-        let response;
+                    headers:{
+                        "Prefer":
+                            "resolution=merge-duplicates,return=representation"
+                    },
 
+                    body:
+                        JSON.stringify(
+                            participant
+                        )
+                }
 
-        try {
-
-            response =
-                await fetch(
-                    databaseURL,
-                    {
-
-                        method:
-                            "POST",
-
-                        headers: {
-
-                            "apikey":
-                                SUPABASE_KEY,
-
-                            "Authorization":
-                                "Bearer " +
-                                SUPABASE_KEY,
-
-                            "Content-Type":
-                                "application/json",
-
-                            "Prefer":
-                                "resolution=merge-duplicates,return=minimal"
-
-                        },
-
-                        body:
-                            JSON.stringify(
-                                participant
-                            )
-
-                    }
-                );
-
-        }
-
-        catch (error) {
-
-            throw new Error(
-                "Database connection failed: " +
-                error.message
             );
 
-        }
+
+        /* -------------------------------------------------
+           GENERATE QR
+        ------------------------------------------------- */
+
+        generateQR(qrCode);
 
 
-        const responseText =
-            await response.text();
-
-
-        if (!response.ok) {
-
-            let errorMessage =
-                responseText;
-
-
-            try {
-
-                const json =
-                    JSON.parse(
-                        responseText
-                    );
-
-
-                errorMessage =
-                    json.message ||
-                    json.details ||
-                    json.hint ||
-                    json.error ||
-                    responseText;
-
-            }
-
-            catch (e) {}
-
-
-            throw new Error(
-                "Database error " +
-                response.status +
-                ": " +
-                errorMessage
-            );
-
-        }
-
-
-        /* =========================================
-           SUCCESS
-        ========================================= */
-
-
-        currentId =
-            qr;
-
-
-        currentPhoto =
-            photoURL;
-
-
-        status(
-            "✅ PARTICIPANT SAVED SUCCESSFULLY!",
-            true
+        showStatus(
+            "PARTICIPANT SAVED SUCCESSFULLY!\n\n" +
+            "Name: " +
+            name +
+            "\nQR ID: " +
+            qrCode,
+            "success"
         );
 
 
-        /* Generate QR */
-
-        generateQR(
-            qr
-        );
-
-
-        /* Refresh list */
-
-        loadParticipants();
+        await loadParticipants();
 
 
     }
-
-    catch (error) {
+    catch(error){
 
         console.error(
             "SAVE ERROR:",
@@ -1063,478 +804,227 @@ async function saveParticipant() {
         );
 
 
-        status(
-            "❌ " +
-            error.message
+        showStatus(
+            "SAVE FAILED\n\n" +
+            error.message +
+            "\n\nOpen Chrome Console (F12) if you need the technical error.",
+            "error"
         );
 
+
     }
+    finally{
 
-    finally {
-
-        button.disabled =
+        saveBtn.disabled =
             false;
 
-        button.textContent =
+        saveBtn.textContent =
             "SAVE PARTICIPANT";
 
     }
 
-}
+});
 
 
-
-/* =====================================================
+/* =========================================================
    GENERATE QR
-===================================================== */
+========================================================= */
 
-async function generateQR(
-    value
-) {
+function generateQR(value){
 
-
-    try {
+    qrContainer.innerHTML = "";
 
 
-        if (
-            typeof QRCode ===
-            "undefined"
-        ) {
-
-            throw new Error(
-                "QR library did not load."
-            );
-
-        }
-
-
-        await QRCode.toCanvas(
-            $("qrCanvas"),
-            value,
+    currentQR =
+        new QRCode(
+            qrContainer,
             {
+                text:value,
 
-                width:
-                    260,
+                width:250,
 
-                margin:
-                    2,
+                height:250,
 
-                errorCorrectionLevel:
-                    "M"
-
+                correctLevel:
+                    QRCode.CorrectLevel.H
             }
         );
 
 
-        $("qrLabel")
-            .textContent =
-            "QR ID: " +
-            value;
-
-
-    }
-
-    catch (error) {
-
-        console.error(
-            "QR ERROR:",
-            error
-        );
-
-    }
-
+    downloadQR.disabled =
+        false;
 }
 
 
-
-/* =====================================================
-   CLEAR FORM
-===================================================== */
-
-$("clearBtn").addEventListener(
-    "click",
-    function () {
-
-
-        $("participantForm")
-            .reset();
-
-
-        $("message")
-            .value =
-            "Welcome to the event!";
-
-
-        $("preview")
-            .removeAttribute(
-                "src"
-            );
-
-
-        $("photoPreviewBox")
-            .style.display =
-            "none";
-
-
-        $("photoName")
-            .textContent =
-            "";
-
-
-        currentId =
-            "";
-
-
-        currentPhoto =
-            "";
-
-
-        $("qrLabel")
-            .textContent =
-            "Save a participant to generate the QR.";
-
-
-        status(
-            "Form cleared."
-        );
-
-    }
-);
-
-
-
-/* =====================================================
+/* =========================================================
    DOWNLOAD QR
-===================================================== */
+========================================================= */
 
-$("downloadQR").addEventListener(
-    "click",
-    function () {
+downloadQR.addEventListener(
+"click",
+function(){
 
+    const img =
+        qrContainer.querySelector("img");
 
-        if (!currentId) {
-
-            alert(
-                "Save a participant first."
-            );
-
-            return;
-
-        }
+    const canvas =
+        qrContainer.querySelector("canvas");
 
 
-        const link =
-            document.createElement(
-                "a"
-            );
+    let url = "";
 
 
-        link.download =
-            currentId +
-            ".png";
+    if(canvas){
 
-
-        link.href =
-            $("qrCanvas")
-            .toDataURL(
+        url =
+            canvas.toDataURL(
                 "image/png"
             );
 
+    }
+    else if(img){
 
-        link.click();
+        url =
+            img.src;
 
     }
-);
 
 
-
-/* =====================================================
-   PRINT QR
-===================================================== */
-
-$("printQR").addEventListener(
-    "click",
-    function () {
+    if(!url)
+        return;
 
 
-        if (!currentId) {
+    const a =
+        document.createElement("a");
 
-            alert(
-                "Save a participant first."
-            );
+    a.href =
+        url;
 
-            return;
+    a.download =
+        "participant-qr.png";
 
-        }
+    document.body.appendChild(a);
 
+    a.click();
 
-        const image =
-            $("qrCanvas")
-            .toDataURL(
-                "image/png"
-            );
+    a.remove();
 
-
-        const printWindow =
-            window.open(
-                "",
-                "_blank"
-            );
+});
 
 
-        printWindow.document.write(`
+/* =========================================================
+   CLEAR FORM
+========================================================= */
 
-            <!doctype html>
+clearBtn.addEventListener(
+"click",
+function(){
 
-            <html>
-
-            <head>
-
-                <title>
-                    ${escapeHTML(currentId)}
-                </title>
-
-            </head>
-
-            <body
-                style="
-                    text-align:center;
-                    font-family:Arial;
-                "
-            >
-
-                <h2>
-                    ${escapeHTML(currentId)}
-                </h2>
-
-                <img
-                    src="${image}"
-                    style="width:300px;"
-                >
-
-                <p>
-                    Scan ID:
-                    ${escapeHTML(currentId)}
-                </p>
-
-            </body>
-
-            </html>
-
-        `);
+    form.reset();
 
 
-        printWindow.document.close();
+    photoPreview.style.display =
+        "none";
+
+    photoPreview.removeAttribute(
+        "src"
+    );
 
 
-        printWindow.focus();
+    photoStatus.textContent =
+        "No photo selected.";
 
 
-        setTimeout(
-            function () {
-
-                printWindow.print();
-
-            },
-            300
-        );
-
-    }
-);
+    qrContainer.innerHTML =
+        "";
 
 
+    downloadQR.disabled =
+        true;
 
-/* =====================================================
+
+    statusBox.style.display =
+        "none";
+
+});
+
+
+/* =========================================================
    LOAD PARTICIPANTS
-===================================================== */
+========================================================= */
 
-async function loadParticipants() {
+async function loadParticipants(){
 
-
-    const url =
-
-        SUPABASE_URL.replace(
-            /\/$/,
-            ""
-        )
-        +
-        "/rest/v1/participants"
-        +
-        "?select=*"
-        +
-        "&order=created_at.desc"
-        +
-        "&limit=100";
-
-
-    try {
-
-
-        const response =
-            await fetch(
-                url,
-                {
-
-                    headers: {
-
-                        "apikey":
-                            SUPABASE_KEY,
-
-                        "Authorization":
-                            "Bearer " +
-                            SUPABASE_KEY
-
-                    }
-
-                }
-            );
-
-
-        const responseText =
-            await response.text();
-
-
-        if (!response.ok) {
-
-            throw new Error(
-                responseText
-            );
-
-        }
-
+    try{
 
         const data =
-            JSON.parse(
-                responseText
+            await supabaseRequest(
+
+                "/rest/v1/participants" +
+                "?select=*" +
+                "&order=created_at.desc"
+
             );
 
 
-        const rows =
-            $("rows");
-
-
-        rows.innerHTML =
+        participantsBox.innerHTML =
             "";
 
 
-        if (
-            !data ||
-            data.length === 0
-        ) {
+        if(!data ||
+           data.length === 0){
 
-
-            rows.innerHTML = `
-
-                <tr>
-
-                    <td
-                        colspan="6"
-                        style="text-align:center;"
-                    >
-                        No participants yet.
-                    </td>
-
-                </tr>
-
-            `;
-
+            participantsBox.innerHTML =
+                '<p class="small">No participants registered yet.</p>';
 
             return;
-
         }
 
 
         data.forEach(
-            function (p) {
+            function(p){
 
-
-                const tr =
+                const div =
                     document.createElement(
-                        "tr"
+                        "div"
                     );
 
-
-                tr.innerHTML = `
-
-                    <td>
-
-                        ${
-                            p.photo_url
-
-                            ?
-
-                            `
-                            <img
-                                src="${escapeHTML(p.photo_url)}"
-                                alt=""
-                                style="
-                                    width:55px;
-                                    height:55px;
-                                    object-fit:cover;
-                                    border-radius:8px;
-                                "
-                            >
-                            `
-
-                            :
-
-                            "—"
-                        }
-
-                    </td>
+                div.className =
+                    "participant";
 
 
-                    <td>
-                        ${escapeHTML(p.qr_code)}
-                    </td>
+                div.innerHTML =
+
+                    "<strong>" +
+                    escapeHTML(p.name) +
+                    "</strong>" +
+
+                    '<span class="small">' +
+                    escapeHTML(
+                        p.qr_code
+                    ) +
+                    "</span><br>" +
+
+                    '<span class="small">' +
+                    escapeHTML(
+                        p.position || ""
+                    ) +
+                    (
+                        p.organization
+                        ?
+                        " • " +
+                        escapeHTML(
+                            p.organization
+                        )
+                        :
+                        ""
+                    ) +
+                    "</span>";
 
 
-                    <td>
-                        ${escapeHTML(p.name)}
-                    </td>
 
-
-                    <td>
-                        ${escapeHTML(p.position || "")}
-                    </td>
-
-
-                    <td>
-                        ${escapeHTML(p.organization || "")}
-                    </td>
-
-
-                    <td>
-
-                        <button
-                            type="button"
-                            class="loadParticipant"
-                        >
-                            LOAD
-                        </button>
-
-                    </td>
-
-                `;
-
-
-                rows.appendChild(
-                    tr
-                );
-
-
-                tr.querySelector(
-                    ".loadParticipant"
-                )
-                .addEventListener(
-                    "click",
-                    function () {
-
-                        loadParticipant(
-                            p.qr_code
-                        );
-
-                    }
+                participantsBox.appendChild(
+                    div
                 );
 
             }
@@ -1542,262 +1032,43 @@ async function loadParticipants() {
 
 
     }
+    catch(error){
 
-    catch (error) {
-
-        console.error(
-            "LOAD PARTICIPANTS ERROR:",
-            error
-        );
-
-
-        $("rows").innerHTML = `
-
-            <tr>
-
-                <td
-                    colspan="6"
-                    style="text-align:center;"
-                >
-                    Unable to load participants.
-                </td>
-
-            </tr>
-
-        `;
+        participantsBox.innerHTML =
+            '<p style="color:#dc2626">' +
+            "Could not load participants: " +
+            escapeHTML(
+                error.message
+            ) +
+            "</p>";
 
     }
 
 }
 
 
+/* =========================================================
+   HTML ESCAPE
+========================================================= */
 
-/* =====================================================
-   LOAD PARTICIPANT
-===================================================== */
+function escapeHTML(value){
 
-async function loadParticipant(
-    id
-) {
-
-
-    const url =
-
-        SUPABASE_URL.replace(
-            /\/$/,
-            ""
-        )
-        +
-        "/rest/v1/participants"
-        +
-        "?select=*"
-        +
-        "&qr_code=eq."
-        +
-        encodeURIComponent(
-            id
-        );
-
-
-    try {
-
-
-        const response =
-            await fetch(
-                url,
-                {
-
-                    headers: {
-
-                        "apikey":
-                            SUPABASE_KEY,
-
-                        "Authorization":
-                            "Bearer " +
-                            SUPABASE_KEY
-
-                    }
-
-                }
-            );
-
-
-        const data =
-            await response.json();
-
-
-        if (
-            !response.ok ||
-            !data.length
-        ) {
-
-            throw new Error(
-                "Participant not found."
-            );
-
-        }
-
-
-        const p =
-            data[0];
-
-
-        $("qr").value =
-            p.qr_code || "";
-
-
-        $("name").value =
-            p.name || "";
-
-
-        $("position").value =
-            p.position || "";
-
-
-        $("org").value =
-            p.organization || "";
-
-
-        $("message").value =
-            p.message ||
-            "";
-
-
-        currentId =
-            p.qr_code ||
-            "";
-
-
-        currentPhoto =
-            p.photo_url ||
-            "";
-
-
-        /* Existing photo */
-
-        if (
-            p.photo_url
-        ) {
-
-            $("preview").src =
-                p.photo_url;
-
-
-            $("photoPreviewBox")
-                .style.display =
-                "block";
-
-
-            $("photoName")
-                .textContent =
-                "Saved participant photo";
-
-        }
-
-
-        generateQR(
-            p.qr_code
-        );
-
-
-        status(
-            "Participant loaded.",
-            true
-        );
-
-
-    }
-
-    catch (error) {
-
-        alert(
-            error.message
-        );
-
-    }
-
+    return String(value || "")
+        .replaceAll("&","&amp;")
+        .replaceAll("<","&lt;")
+        .replaceAll(">","&gt;")
+        .replaceAll('"',"&quot;")
+        .replaceAll("'","&#039;");
 }
 
 
-
-/* =====================================================
-   ESCAPE HTML
-===================================================== */
-
-function escapeHTML(
-    value
-) {
-
-
-    return String(
-        value ?? ""
-    )
-    .replace(
-        /[&<>"']/g,
-        function (character) {
-
-
-            return {
-
-                "&":
-                    "&amp;",
-
-                "<":
-                    "&lt;",
-
-                ">":
-                    "&gt;",
-
-                '"':
-                    "&quot;",
-
-                "'":
-                    "&#039;"
-
-            }[character];
-
-
-        }
-    );
-
-}
-
-
-
-/* =====================================================
-   SAVE BUTTON
-===================================================== */
-
-$("saveBtn").onclick =
-    function () {
-
-        saveParticipant();
-
-    };
-
-
-
-/* =====================================================
+/* =========================================================
    START
-===================================================== */
-
-console.log(
-    "QR Admin System loaded."
-);
-
-
-console.log(
-    "Supabase URL:",
-    SUPABASE_URL
-);
-
-
-/* Load existing participants */
+========================================================= */
 
 loadParticipants();
 
 </script>
-
 
 </body>
 </html>
