@@ -10,153 +10,173 @@
 
 <style>
 
-*{
-    box-sizing:border-box;
+* {
+    box-sizing: border-box;
 }
 
-body{
-    margin:0;
-    font-family:Arial,Helvetica,sans-serif;
-    background:#f1f5f9;
-    color:#0f172a;
+body {
+    margin: 0;
+    font-family: Arial, Helvetica, sans-serif;
+    background: #f1f5f9;
+    color: #0f172a;
 }
 
-.container{
-    max-width:1000px;
-    margin:auto;
-    padding:25px;
+.container {
+    max-width: 1000px;
+    margin: auto;
+    padding: 25px;
 }
 
-.card{
-    background:white;
-    border-radius:16px;
-    padding:25px;
-    margin-bottom:20px;
-    box-shadow:0 5px 25px rgba(0,0,0,.08);
+.card {
+    background: white;
+    border-radius: 16px;
+    padding: 25px;
+    margin-bottom: 20px;
+    box-shadow: 0 5px 25px rgba(0,0,0,.08);
 }
 
-h1{
-    margin-top:0;
+h1 {
+    margin-top: 0;
 }
 
-label{
-    display:block;
-    font-weight:bold;
-    margin-top:15px;
-    margin-bottom:6px;
+h2 {
+    margin-top: 0;
+}
+
+label {
+    display: block;
+    font-weight: bold;
+    margin-top: 15px;
+    margin-bottom: 6px;
 }
 
 input,
-textarea{
-    width:100%;
-    padding:12px;
-    border:1px solid #cbd5e1;
-    border-radius:8px;
-    font-size:16px;
+textarea {
+    width: 100%;
+    padding: 12px;
+    border: 1px solid #cbd5e1;
+    border-radius: 8px;
+    font-size: 16px;
 }
 
-textarea{
-    min-height:100px;
-    resize:vertical;
+textarea {
+    min-height: 100px;
+    resize: vertical;
 }
 
-button{
-    border:0;
-    padding:12px 18px;
-    border-radius:8px;
-    font-weight:bold;
-    cursor:pointer;
-    font-size:15px;
+button {
+    border: 0;
+    padding: 12px 18px;
+    border-radius: 8px;
+    font-weight: bold;
+    cursor: pointer;
+    font-size: 15px;
 }
 
-.primary{
-    background:#2563eb;
-    color:white;
+button:disabled {
+    opacity: .6;
+    cursor: not-allowed;
 }
 
-.secondary{
-    background:#475569;
-    color:white;
+.primary {
+    background: #2563eb;
+    color: white;
 }
 
-.success{
-    background:#16a34a;
-    color:white;
+.secondary {
+    background: #475569;
+    color: white;
 }
 
-button:disabled{
-    opacity:.6;
-    cursor:not-allowed;
+.success {
+    background: #16a34a;
+    color: white;
 }
 
-.preview{
-    margin-top:15px;
-    text-align:center;
+.preview {
+    margin-top: 15px;
+    text-align: center;
 }
 
-.preview img{
-    display:none;
-    max-width:220px;
-    max-height:220px;
-    margin:auto;
-    border-radius:12px;
-    object-fit:cover;
-    border:3px solid #e2e8f0;
+.preview img {
+    display: none;
+    max-width: 220px;
+    max-height: 220px;
+    margin: auto;
+    border-radius: 12px;
+    object-fit: cover;
+    border: 3px solid #e2e8f0;
 }
 
-#photoStatus{
-    margin-top:10px;
-    color:#64748b;
+#photoStatus {
+    margin-top: 10px;
+    color: #64748b;
+    text-align: center;
 }
 
-.status{
-    padding:12px;
-    border-radius:8px;
-    margin-top:15px;
-    display:none;
-    white-space:pre-wrap;
+.status {
+    padding: 12px;
+    border-radius: 8px;
+    margin-top: 15px;
+    display: none;
+    white-space: pre-wrap;
 }
 
-.status.success{
-    display:block;
-    background:#dcfce7;
-    color:#166534;
+.status.success {
+    display: block;
+    background: #dcfce7;
+    color: #166534;
 }
 
-.status.error{
-    display:block;
-    background:#fee2e2;
-    color:#991b1b;
+.status.error {
+    display: block;
+    background: #fee2e2;
+    color: #991b1b;
 }
 
-.qr-area{
-    text-align:center;
-    margin-top:20px;
+.qr-area {
+    text-align: center;
+    margin-top: 20px;
 }
 
-#qrcode{
-    display:inline-block;
-    padding:15px;
-    background:white;
+#qrcode {
+    display: inline-block;
+    padding: 15px;
+    background: white;
+    min-height: 30px;
 }
 
-.participant{
-    padding:15px;
-    border-bottom:1px solid #e2e8f0;
+.qr-id {
+    font-size: 20px;
+    font-weight: bold;
+    margin-top: 15px;
+    color: #2563eb;
 }
 
-.participant:last-child{
-    border-bottom:0;
+.participant {
+    padding: 15px;
+    border-bottom: 1px solid #e2e8f0;
 }
 
-.participant strong{
-    display:block;
-    font-size:18px;
+.participant:last-child {
+    border-bottom: 0;
 }
 
-.small{
-    color:#64748b;
-    font-size:14px;
+.participant strong {
+    display: block;
+    font-size: 18px;
+}
+
+.small {
+    color: #64748b;
+    font-size: 14px;
+}
+
+.actions {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin-top: 20px;
 }
 
 </style>
@@ -166,133 +186,172 @@ button:disabled{
 
 <div class="container">
 
-<div class="card">
+    <!-- ================================
+         ADMIN FORM
+    ================================= -->
 
-<h1>QR Event System — Admin</h1>
+    <div class="card">
 
-<p class="small">
-Register a participant and generate their QR code.
-</p>
+        <h1>QR Event System — Admin</h1>
 
-<form id="participantForm">
+        <p class="small">
+            Register a participant and generate their QR code.
+        </p>
 
-<label>QR Code ID</label>
+        <form id="participantForm">
 
-<input
-    id="qr_code"
-    type="text"
-    placeholder="Example: SM-2026-0001"
-    required
->
+            <label for="qr_code">
+                QR Code ID
+            </label>
 
-<label>Name</label>
+            <input
+                id="qr_code"
+                type="text"
+                placeholder="Example: SM-2026-0001"
+                required
+            >
 
-<input
-    id="name"
-    type="text"
-    placeholder="Participant name"
-    required
->
+            <label for="name">
+                Name
+            </label>
 
-<label>Position</label>
+            <input
+                id="name"
+                type="text"
+                placeholder="Participant name"
+                required
+            >
 
-<input
-    id="position"
-    type="text"
-    placeholder="Mayor / Guest / Participant"
->
+            <label for="position">
+                Position
+            </label>
 
-<label>Organization</label>
+            <input
+                id="position"
+                type="text"
+                placeholder="Mayor / Guest / Participant"
+            >
 
-<input
-    id="organization"
-    type="text"
-    placeholder="Organization"
->
+            <label for="organization">
+                Organization
+            </label>
 
-<label>Message</label>
+            <input
+                id="organization"
+                type="text"
+                placeholder="Organization"
+            >
 
-<textarea
-    id="message"
-    placeholder="Welcome message..."
-></textarea>
+            <label for="message">
+                Message
+            </label>
 
-<label>Participant Photo</label>
+            <textarea
+                id="message"
+                placeholder="Welcome message..."
+            ></textarea>
 
-<input
-    id="photo"
-    type="file"
-    accept="image/*"
->
+            <label for="photo">
+                Participant Photo
+            </label>
 
-<div id="photoStatus">
-No photo selected.
-</div>
+            <input
+                id="photo"
+                type="file"
+                accept="image/*"
+            >
 
-<div class="preview">
+            <div id="photoStatus">
+                No photo selected.
+            </div>
 
-<img id="photoPreview" alt="Photo Preview">
+            <div class="preview">
 
-</div>
+                <img
+                    id="photoPreview"
+                    alt="Photo Preview"
+                >
 
-<br>
+            </div>
 
-<button
-    id="saveBtn"
-    class="primary"
-    type="submit"
->
-SAVE PARTICIPANT
-</button>
+            <div class="actions">
 
-<button
-    id="clearBtn"
-    class="secondary"
-    type="button"
->
-CLEAR
-</button>
+                <button
+                    id="saveBtn"
+                    class="primary"
+                    type="submit"
+                >
+                    SAVE PARTICIPANT
+                </button>
 
-</form>
+                <button
+                    id="clearBtn"
+                    class="secondary"
+                    type="button"
+                >
+                    CLEAR
+                </button>
 
-<div id="status" class="status"></div>
+            </div>
 
-</div>
+        </form>
 
+        <div
+            id="status"
+            class="status"
+        ></div>
 
-<div class="card">
-
-<h2>Generated QR Code</h2>
-
-<div class="qr-area">
-
-<div id="qrcode"></div>
-
-<br><br>
-
-<button
-    id="downloadQR"
-    class="success"
-    type="button"
-    disabled
->
-DOWNLOAD QR
-</button>
-
-</div>
-
-</div>
+    </div>
 
 
-<div class="card">
+    <!-- ================================
+         QR CODE
+    ================================= -->
 
-<h2>Registered Participants</h2>
+    <div class="card">
 
-<div id="participants">
-Loading...
-</div>
+        <h2>Participant QR Code</h2>
 
-</div>
+        <div class="qr-area">
+
+            <div id="qrcode"></div>
+
+            <div
+                id="qrIdDisplay"
+                class="qr-id"
+            >
+                No QR generated
+            </div>
+
+            <br>
+
+            <button
+                id="downloadQR"
+                class="success"
+                type="button"
+                disabled
+            >
+                DOWNLOAD QR
+            </button>
+
+        </div>
+
+    </div>
+
+
+    <!-- ================================
+         PARTICIPANT LIST
+    ================================= -->
+
+    <div class="card">
+
+        <h2>Registered Participants</h2>
+
+        <div id="participants">
+            Loading...
+        </div>
+
+    </div>
 
 </div>
 
@@ -300,17 +359,17 @@ Loading...
 <script>
 
 /* =========================================================
-   SUPABASE CONFIG
+   SUPABASE CONFIGURATION
 ========================================================= */
 
 const SUPABASE_URL =
-"https://bduudxtfqyswgwimvzpr.supabase.co";
+    "https://bduudxtfqyswgwimvzpr.supabase.co";
 
 const SUPABASE_KEY =
-"sb_publishable_Qf9weBIOViUWuNA6STFB2A_CFMMevop";
+    "sb_publishable_Qf9weBIOViUWuNA6STFB2A_CFMMevop";
 
 const BUCKET =
-"participant-photos";
+    "participant-photos";
 
 
 /* =========================================================
@@ -318,130 +377,146 @@ const BUCKET =
 ========================================================= */
 
 const form =
-document.getElementById("participantForm");
+    document.getElementById(
+        "participantForm"
+    );
 
 const saveBtn =
-document.getElementById("saveBtn");
+    document.getElementById(
+        "saveBtn"
+    );
 
 const clearBtn =
-document.getElementById("clearBtn");
+    document.getElementById(
+        "clearBtn"
+    );
 
 const photoInput =
-document.getElementById("photo");
+    document.getElementById(
+        "photo"
+    );
 
 const photoPreview =
-document.getElementById("photoPreview");
+    document.getElementById(
+        "photoPreview"
+    );
 
 const photoStatus =
-document.getElementById("photoStatus");
+    document.getElementById(
+        "photoStatus"
+    );
 
 const statusBox =
-document.getElementById("status");
+    document.getElementById(
+        "status"
+    );
 
 const qrContainer =
-document.getElementById("qrcode");
+    document.getElementById(
+        "qrcode"
+    );
+
+const qrIdDisplay =
+    document.getElementById(
+        "qrIdDisplay"
+    );
 
 const downloadQR =
-document.getElementById("downloadQR");
+    document.getElementById(
+        "downloadQR"
+    );
 
 const participantsBox =
-document.getElementById("participants");
-
-
-let currentQR = null;
-
-
-/* =========================================================
-   STATUS
-========================================================= */
-
-function showStatus(message,type){
-
-    statusBox.className =
-        "status " + type;
-
-    statusBox.textContent =
-        message;
-
-    statusBox.style.display =
-        "block";
-}
+    document.getElementById(
+        "participants"
+    );
 
 
 /* =========================================================
    PHOTO PREVIEW
 ========================================================= */
 
-photoInput.addEventListener("change",function(){
+photoInput.addEventListener(
+    "change",
+    function () {
 
-    const file =
-        this.files && this.files[0];
+        const file =
+            this.files &&
+            this.files[0];
 
-    if(!file){
 
-        photoPreview.style.display =
-            "none";
+        if (!file) {
 
-        photoPreview.removeAttribute("src");
+            photoPreview.style.display =
+                "none";
+
+            photoPreview.removeAttribute(
+                "src"
+            );
+
+            photoStatus.textContent =
+                "No photo selected.";
+
+            return;
+        }
+
+
+        if (!file.type.startsWith("image/")) {
+
+            photoPreview.style.display =
+                "none";
+
+            photoStatus.textContent =
+                "Please select an image file.";
+
+            this.value = "";
+
+            return;
+        }
+
 
         photoStatus.textContent =
-            "No photo selected.";
+            "Loading photo...";
 
-        return;
+
+        const reader =
+            new FileReader();
+
+
+        reader.onload =
+            function (event) {
+
+                photoPreview.src =
+                    event.target.result;
+
+                photoPreview.style.display =
+                    "block";
+
+                photoStatus.textContent =
+                    file.name +
+                    " (" +
+                    Math.round(
+                        file.size / 1024
+                    ) +
+                    " KB)";
+            };
+
+
+        reader.onerror =
+            function () {
+
+                photoPreview.style.display =
+                    "none";
+
+                photoStatus.textContent =
+                    "Unable to preview this photo.";
+            };
+
+
+        reader.readAsDataURL(file);
+
     }
-
-
-    if(!file.type.startsWith("image/")){
-
-        photoPreview.style.display =
-            "none";
-
-        photoStatus.textContent =
-            "Please select an image file.";
-
-        this.value = "";
-
-        return;
-    }
-
-
-    photoStatus.textContent =
-        "Loading photo...";
-
-
-    const reader =
-        new FileReader();
-
-
-    reader.onload = function(event){
-
-        photoPreview.src =
-            event.target.result;
-
-        photoPreview.style.display =
-            "block";
-
-        photoStatus.textContent =
-            file.name +
-            " (" +
-            Math.round(file.size / 1024) +
-            " KB)";
-    };
-
-
-    reader.onerror = function(){
-
-        photoPreview.style.display =
-            "none";
-
-        photoStatus.textContent =
-            "Unable to preview this photo.";
-    };
-
-
-    reader.readAsDataURL(file);
-
-});
+);
 
 
 /* =========================================================
@@ -450,8 +525,8 @@ photoInput.addEventListener("change",function(){
 
 async function supabaseRequest(
     endpoint,
-    options={}
-){
+    options = {}
+) {
 
     const response =
         await fetch(
@@ -460,8 +535,10 @@ async function supabaseRequest(
             {
                 ...options,
 
-                headers:{
-                    "apikey":SUPABASE_KEY,
+                headers: {
+
+                    "apikey":
+                        SUPABASE_KEY,
 
                     "Authorization":
                         "Bearer " +
@@ -482,44 +559,66 @@ async function supabaseRequest(
 
     let data = null;
 
-    try{
+
+    try {
+
         data =
-            text ? JSON.parse(text) : null;
+            text
+                ? JSON.parse(text)
+                : null;
+
     }
-    catch{
+    catch {
+
         data = text;
+
     }
 
 
-    if(!response.ok){
+    if (!response.ok) {
 
-        let message =
+        let errorMessage =
             "HTTP " +
             response.status;
 
 
-        if(data){
+        if (data) {
 
-            if(data.message)
-                message +=
-                    "\n" + data.message;
+            if (data.message) {
 
-            else if(data.error)
-                message +=
-                    "\n" + data.error;
+                errorMessage +=
+                    "\n" +
+                    data.message;
 
-            else
-                message +=
+            }
+
+            else if (data.error) {
+
+                errorMessage +=
+                    "\n" +
+                    data.error;
+
+            }
+
+            else {
+
+                errorMessage +=
                     "\n" +
                     JSON.stringify(data);
+
+            }
+
         }
 
 
-        throw new Error(message);
+        throw new Error(
+            errorMessage
+        );
     }
 
 
     return data;
+
 }
 
 
@@ -527,17 +626,20 @@ async function supabaseRequest(
    UPLOAD PHOTO
 ========================================================= */
 
-async function uploadPhoto(file,qrCode){
+async function uploadPhoto(
+    file,
+    qrCode
+) {
 
-    if(!file)
+    if (!file)
         return "";
 
 
     const extension =
         file.name
-        .split(".")
-        .pop()
-        .toLowerCase();
+            .split(".")
+            .pop()
+            .toLowerCase();
 
 
     const filename =
@@ -548,10 +650,6 @@ async function uploadPhoto(file,qrCode){
         extension;
 
 
-    const path =
-        filename;
-
-
     const response =
         await fetch(
 
@@ -559,13 +657,18 @@ async function uploadPhoto(file,qrCode){
             "/storage/v1/object/" +
             BUCKET +
             "/" +
-            encodeURIComponent(path),
+            encodeURIComponent(
+                filename
+            ),
 
             {
-                method:"POST",
 
-                headers:{
-                    "apikey":SUPABASE_KEY,
+                method: "POST",
+
+                headers: {
+
+                    "apikey":
+                        SUPABASE_KEY,
 
                     "Authorization":
                         "Bearer " +
@@ -577,9 +680,11 @@ async function uploadPhoto(file,qrCode){
 
                     "x-upsert":
                         "true"
+
                 },
 
-                body:file
+                body: file
+
             }
 
         );
@@ -589,25 +694,111 @@ async function uploadPhoto(file,qrCode){
         await response.text();
 
 
-    if(!response.ok){
+    if (!response.ok) {
 
         throw new Error(
+
             "Photo upload failed.\n" +
+
             "HTTP " +
             response.status +
+
             "\n" +
+
             text
+
         );
+
     }
 
 
     return (
+
         SUPABASE_URL +
+
         "/storage/v1/object/public/" +
+
         BUCKET +
+
         "/" +
-        encodeURIComponent(path)
+
+        encodeURIComponent(
+            filename
+        )
+
     );
+
+}
+
+
+/* =========================================================
+   GENERATE QR CODE
+========================================================= */
+
+function generateQR(
+    participantID
+) {
+
+    const value =
+        String(
+            participantID
+        ).trim();
+
+
+    /* Clear old QR */
+
+    qrContainer.innerHTML =
+        "";
+
+
+    qrIdDisplay.textContent =
+        "QR ID: " +
+        value;
+
+
+    /*
+       IMPORTANT:
+
+       The QR contains ONLY the participant ID.
+
+       Example:
+
+       SM-2026-0001
+    */
+
+    new QRCode(
+
+        qrContainer,
+
+        {
+
+            text: value,
+
+            width: 250,
+
+            height: 250,
+
+            colorDark: "#000000",
+
+            colorLight: "#ffffff",
+
+            correctLevel:
+                QRCode.CorrectLevel.H
+
+        }
+
+    );
+
+
+    downloadQR.disabled =
+        false;
+
+
+    /* Store current ID */
+
+    downloadQR.dataset.qr =
+        value;
+
 }
 
 
@@ -616,244 +807,286 @@ async function uploadPhoto(file,qrCode){
 ========================================================= */
 
 form.addEventListener(
-"submit",
-async function(event){
+    "submit",
+    async function (event) {
 
-    event.preventDefault();
-
-
-    saveBtn.disabled =
-        true;
-
-    saveBtn.textContent =
-        "SAVING...";
+        event.preventDefault();
 
 
-    try{
+        saveBtn.disabled =
+            true;
 
-        const qrCode =
-            document
-            .getElementById("qr_code")
-            .value
-            .trim();
-
-        const name =
-            document
-            .getElementById("name")
-            .value
-            .trim();
-
-        const position =
-            document
-            .getElementById("position")
-            .value
-            .trim();
-
-        const organization =
-            document
-            .getElementById("organization")
-            .value
-            .trim();
-
-        const message =
-            document
-            .getElementById("message")
-            .value
-            .trim();
-
-        const photo =
-            photoInput.files &&
-            photoInput.files[0];
+        saveBtn.textContent =
+            "SAVING...";
 
 
-        if(!qrCode){
+        try {
 
-            throw new Error(
-                "QR Code ID is required."
-            );
-        }
-
-
-        if(!name){
-
-            throw new Error(
-                "Participant name is required."
-            );
-        }
+            const qrCode =
+                document
+                    .getElementById(
+                        "qr_code"
+                    )
+                    .value
+                    .trim();
 
 
-        showStatus(
-            "Checking Supabase database...",
-            "success"
-        );
+            const name =
+                document
+                    .getElementById(
+                        "name"
+                    )
+                    .value
+                    .trim();
 
 
-        /* -------------------------------------------------
-           CHECK DATABASE
-        ------------------------------------------------- */
-
-        await supabaseRequest(
-            "/rest/v1/participants" +
-            "?select=id" +
-            "&qr_code=eq." +
-            encodeURIComponent(qrCode)
-        );
+            const position =
+                document
+                    .getElementById(
+                        "position"
+                    )
+                    .value
+                    .trim();
 
 
-        /* -------------------------------------------------
-           PHOTO
-        ------------------------------------------------- */
+            const organization =
+                document
+                    .getElementById(
+                        "organization"
+                    )
+                    .value
+                    .trim();
 
-        let photoURL = "";
+
+            const message =
+                document
+                    .getElementById(
+                        "message"
+                    )
+                    .value
+                    .trim();
 
 
-        if(photo){
+            const photo =
+                photoInput.files &&
+                photoInput.files[0];
+
+
+            /* -----------------------------------------
+               VALIDATION
+            ----------------------------------------- */
+
+            if (!qrCode) {
+
+                throw new Error(
+                    "QR Code ID is required."
+                );
+
+            }
+
+
+            if (!name) {
+
+                throw new Error(
+                    "Participant name is required."
+                );
+
+            }
+
+
+            /* -----------------------------------------
+               STATUS
+            ----------------------------------------- */
 
             showStatus(
-                "Uploading participant photo...",
+                "Checking database...",
                 "success"
             );
 
 
-            photoURL =
-                await uploadPhoto(
-                    photo,
+            /* -----------------------------------------
+               CHECK DATABASE CONNECTION
+            ----------------------------------------- */
+
+            await supabaseRequest(
+
+                "/rest/v1/participants" +
+                "?select=id" +
+                "&qr_code=eq." +
+                encodeURIComponent(
                     qrCode
+                )
+
+            );
+
+
+            /* -----------------------------------------
+               UPLOAD PHOTO
+            ----------------------------------------- */
+
+            let photoURL = "";
+
+
+            if (photo) {
+
+                showStatus(
+                    "Uploading participant photo...",
+                    "success"
                 );
-        }
 
 
-        /* -------------------------------------------------
-           UPSERT PARTICIPANT
-        ------------------------------------------------- */
+                photoURL =
+                    await uploadPhoto(
+                        photo,
+                        qrCode
+                    );
 
-        showStatus(
-            "Saving participant information...",
-            "success"
-        );
-
-
-        const participant = {
-
-            qr_code:qrCode,
-
-            name:name,
-
-            position:position,
-
-            organization:organization,
-
-            message:message,
-
-            photo_url:photoURL,
-
-            updated_at:
-                new Date().toISOString()
-        };
+            }
 
 
-        const saved =
+            /* -----------------------------------------
+               PARTICIPANT DATA
+            ----------------------------------------- */
+
+            const participant = {
+
+                qr_code:
+                    qrCode,
+
+                name:
+                    name,
+
+                position:
+                    position,
+
+                organization:
+                    organization,
+
+                message:
+                    message,
+
+                photo_url:
+                    photoURL,
+
+                updated_at:
+                    new Date().toISOString()
+
+            };
+
+
+            /* -----------------------------------------
+               SAVE TO SUPABASE
+            ----------------------------------------- */
+
+            showStatus(
+                "Saving participant information...",
+                "success"
+            );
+
+
             await supabaseRequest(
 
                 "/rest/v1/participants" +
                 "?on_conflict=qr_code",
 
                 {
-                    method:"POST",
 
-                    headers:{
+                    method:
+                        "POST",
+
+                    headers: {
+
                         "Prefer":
                             "resolution=merge-duplicates,return=representation"
+
                     },
 
                     body:
                         JSON.stringify(
                             participant
                         )
+
                 }
 
             );
 
 
-        /* -------------------------------------------------
-           GENERATE QR
-        ------------------------------------------------- */
+            /* -----------------------------------------
+               SUCCESS
+            ----------------------------------------- */
 
-        generateQR(qrCode);
+            /*
+               QR IS GENERATED HERE,
+               ONLY AFTER SUPABASE SUCCESSFULLY
+               SAVED THE PARTICIPANT.
+            */
 
-
-        showStatus(
-            "PARTICIPANT SAVED SUCCESSFULLY!\n\n" +
-            "Name: " +
-            name +
-            "\nQR ID: " +
-            qrCode,
-            "success"
-        );
+            generateQR(
+                qrCode
+            );
 
 
-        await loadParticipants();
+            showStatus(
 
+                "PARTICIPANT SAVED SUCCESSFULLY!\n\n" +
+
+                "Name: " +
+                name +
+
+                "\nQR ID: " +
+                qrCode +
+
+                "\n\nThe QR code on the right has been updated."
+
+                ,
+
+                "success"
+
+            );
+
+
+            /* -----------------------------------------
+               REFRESH PARTICIPANT LIST
+            ----------------------------------------- */
+
+            await loadParticipants();
+
+
+        }
+
+        catch (error) {
+
+            console.error(
+                "SAVE ERROR:",
+                error
+            );
+
+
+            showStatus(
+
+                "SAVE FAILED\n\n" +
+
+                error.message,
+
+                "error"
+
+            );
+
+        }
+
+
+        finally {
+
+            saveBtn.disabled =
+                false;
+
+            saveBtn.textContent =
+                "SAVE PARTICIPANT";
+
+        }
 
     }
-    catch(error){
-
-        console.error(
-            "SAVE ERROR:",
-            error
-        );
-
-
-        showStatus(
-            "SAVE FAILED\n\n" +
-            error.message +
-            "\n\nOpen Chrome Console (F12) if you need the technical error.",
-            "error"
-        );
-
-
-    }
-    finally{
-
-        saveBtn.disabled =
-            false;
-
-        saveBtn.textContent =
-            "SAVE PARTICIPANT";
-
-    }
-
-});
-
-
-/* =========================================================
-   GENERATE QR
-========================================================= */
-
-function generateQR(value){
-
-    qrContainer.innerHTML = "";
-
-
-    currentQR =
-        new QRCode(
-            qrContainer,
-            {
-                text:value,
-
-                width:250,
-
-                height:250,
-
-                correctLevel:
-                    QRCode.CorrectLevel.H
-            }
-        );
-
-
-    downloadQR.disabled =
-        false;
-}
+);
 
 
 /* =========================================================
@@ -861,55 +1094,83 @@ function generateQR(value){
 ========================================================= */
 
 downloadQR.addEventListener(
-"click",
-function(){
+    "click",
+    function () {
 
-    const img =
-        qrContainer.querySelector("img");
-
-    const canvas =
-        qrContainer.querySelector("canvas");
-
-
-    let url = "";
-
-
-    if(canvas){
-
-        url =
-            canvas.toDataURL(
-                "image/png"
+        const canvas =
+            qrContainer.querySelector(
+                "canvas"
             );
 
+        const img =
+            qrContainer.querySelector(
+                "img"
+            );
+
+
+        let url = "";
+
+
+        if (canvas) {
+
+            url =
+                canvas.toDataURL(
+                    "image/png"
+                );
+
+        }
+
+        else if (img) {
+
+            url =
+                img.src;
+
+        }
+
+
+        if (!url) {
+
+            alert(
+                "No QR code available."
+            );
+
+            return;
+
+        }
+
+
+        const qrID =
+            this.dataset.qr ||
+            "participant";
+
+
+        const link =
+            document.createElement(
+                "a"
+            );
+
+
+        link.href =
+            url;
+
+
+        link.download =
+            qrID +
+            "-QR.png";
+
+
+        document.body.appendChild(
+            link
+        );
+
+
+        link.click();
+
+
+        link.remove();
+
     }
-    else if(img){
-
-        url =
-            img.src;
-
-    }
-
-
-    if(!url)
-        return;
-
-
-    const a =
-        document.createElement("a");
-
-    a.href =
-        url;
-
-    a.download =
-        "participant-qr.png";
-
-    document.body.appendChild(a);
-
-    a.click();
-
-    a.remove();
-
-});
+);
 
 
 /* =========================================================
@@ -917,45 +1178,58 @@ function(){
 ========================================================= */
 
 clearBtn.addEventListener(
-"click",
-function(){
+    "click",
+    function () {
 
-    form.reset();
-
-
-    photoPreview.style.display =
-        "none";
-
-    photoPreview.removeAttribute(
-        "src"
-    );
+        form.reset();
 
 
-    photoStatus.textContent =
-        "No photo selected.";
+        photoPreview.style.display =
+            "none";
 
 
-    qrContainer.innerHTML =
-        "";
+        photoPreview.removeAttribute(
+            "src"
+        );
 
 
-    downloadQR.disabled =
-        true;
+        photoStatus.textContent =
+            "No photo selected.";
 
 
-    statusBox.style.display =
-        "none";
+        statusBox.style.display =
+            "none";
 
-});
+
+        /*
+           Clear QR too when CLEAR is pressed.
+        */
+
+        qrContainer.innerHTML =
+            "";
+
+
+        qrIdDisplay.textContent =
+            "No QR generated";
+
+
+        downloadQR.disabled =
+            true;
+
+
+        delete downloadQR.dataset.qr;
+
+    }
+);
 
 
 /* =========================================================
    LOAD PARTICIPANTS
 ========================================================= */
 
-async function loadParticipants(){
+async function loadParticipants() {
 
-    try{
+    try {
 
         const data =
             await supabaseRequest(
@@ -971,23 +1245,29 @@ async function loadParticipants(){
             "";
 
 
-        if(!data ||
-           data.length === 0){
+        if (
+            !data ||
+            data.length === 0
+        ) {
 
             participantsBox.innerHTML =
-                '<p class="small">No participants registered yet.</p>';
+                '<p class="small">' +
+                'No participants registered yet.' +
+                '</p>';
 
             return;
+
         }
 
 
         data.forEach(
-            function(p){
+            function (participant) {
 
                 const div =
                     document.createElement(
                         "div"
                     );
+
 
                 div.className =
                     "participant";
@@ -996,31 +1276,40 @@ async function loadParticipants(){
                 div.innerHTML =
 
                     "<strong>" +
-                    escapeHTML(p.name) +
+
+                    escapeHTML(
+                        participant.name
+                    ) +
+
                     "</strong>" +
 
                     '<span class="small">' +
+
+                    "QR ID: " +
+
                     escapeHTML(
-                        p.qr_code
+                        participant.qr_code
                     ) +
+
                     "</span><br>" +
 
                     '<span class="small">' +
+
                     escapeHTML(
-                        p.position || ""
-                    ) +
-                    (
-                        p.organization
-                        ?
-                        " • " +
-                        escapeHTML(
-                            p.organization
-                        )
-                        :
+                        participant.position ||
                         ""
                     ) +
-                    "</span>";
 
+                    (
+                        participant.organization
+                            ? " • " +
+                              escapeHTML(
+                                  participant.organization
+                              )
+                            : ""
+                    ) +
+
+                    "</span>";
 
 
                 participantsBox.appendChild(
@@ -1030,16 +1319,20 @@ async function loadParticipants(){
             }
         );
 
-
     }
-    catch(error){
+
+    catch (error) {
 
         participantsBox.innerHTML =
+
             '<p style="color:#dc2626">' +
+
             "Could not load participants: " +
+
             escapeHTML(
                 error.message
             ) +
+
             "</p>";
 
     }
@@ -1048,22 +1341,71 @@ async function loadParticipants(){
 
 
 /* =========================================================
-   HTML ESCAPE
+   STATUS MESSAGE
 ========================================================= */
 
-function escapeHTML(value){
+function showStatus(
+    message,
+    type
+) {
 
-    return String(value || "")
-        .replaceAll("&","&amp;")
-        .replaceAll("<","&lt;")
-        .replaceAll(">","&gt;")
-        .replaceAll('"',"&quot;")
-        .replaceAll("'","&#039;");
+    statusBox.className =
+        "status " +
+        type;
+
+
+    statusBox.textContent =
+        message;
+
+
+    statusBox.style.display =
+        "block";
+
 }
 
 
 /* =========================================================
-   START
+   HTML ESCAPE
+========================================================= */
+
+function escapeHTML(
+    value
+) {
+
+    return String(
+        value || ""
+    )
+
+    .replaceAll(
+        "&",
+        "&amp;"
+    )
+
+    .replaceAll(
+        "<",
+        "&lt;"
+    )
+
+    .replaceAll(
+        ">",
+        "&gt;"
+    )
+
+    .replaceAll(
+        '"',
+        "&quot;"
+    )
+
+    .replaceAll(
+        "'",
+        "&#039;"
+    );
+
+}
+
+
+/* =========================================================
+   INITIAL LOAD
 ========================================================= */
 
 loadParticipants();
