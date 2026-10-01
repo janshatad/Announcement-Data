@@ -1,9 +1,15 @@
-QR Event System — Admin + LED Wall Update
+LED WALL FIX
 
-Replace admin.html and display.html in GitHub Pages.
-Run system_settings.sql in Supabase SQL Editor first.
+Replace scanner.html and display.html in your GitHub Pages repository.
 
-Admin: add/edit/delete participants, photos, QR, TTS settings.
-Display: clean LED presentation with no visible controls; automatically reads scans and uses TTS settings from Supabase.
+The important fix is that display.html no longer depends on Supabase's embedded participants relationship. It:
+1. Reads the newest scan_history row.
+2. Gets participant_id from that row.
+3. Fetches the participant directly from participants.
+4. Updates the LED wall.
 
-Use ?v=20 on the URLs to bypass browser cache.
+scanner.html now also checks whether scan_history INSERT succeeds and shows the exact error.
+
+Use cache-busting URLs after deployment:
+scanner.html?v=22
+display.html?v=22
