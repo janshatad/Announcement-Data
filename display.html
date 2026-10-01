@@ -1,11 +1,44 @@
 <!doctype html>
 <html lang="en">
 <head>
-<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>LED Wall Display</title><link rel="stylesheet" href="style.css">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>LED Wall Display</title>
+<link rel="stylesheet" href="style.css">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+#ttsControls{
+  position:fixed;right:20px;top:20px;z-index:9999;
+  display:flex;gap:8px;align-items:center;flex-wrap:wrap;
+  padding:10px 12px;border-radius:12px;
+  background:rgba(0,0,0,.75);color:#fff;
+  font-family:Arial,sans-serif;font-size:14px;
+}
+#ttsControls button,#ttsControls select,#ttsControls input{
+  font-size:14px;padding:7px 10px;border-radius:8px;
+}
+#ttsStatus{font-weight:bold}
+@media(max-width:700px){
+  #ttsControls{right:8px;top:8px;font-size:12px}
+}
+</style>
 </head>
+
 <body class="led">
+
+<div id="ttsControls">
+  <button id="ttsEnable" type="button">🔊 ENABLE TTS</button>
+  <button id="ttsTest" type="button">TEST</button>
+  <label>
+    <input id="ttsAuto" type="checkbox" checked>
+    Auto
+  </label>
+  <select id="ttsVoice">
+    <option value="">Default voice</option>
+  </select>
+  <span id="ttsStatus">TTS OFF</span>
+</div>
+
 <main class="led-inner">
   <div class="led-welcome">WELCOME</div>
   <img id="photo" class="led-photo" alt="Participant">
@@ -14,21 +47,320 @@
   <div id="message" class="led-message"></div>
   <div class="led-footer">QR EVENT INFORMATION SYSTEM</div>
 </main>
+
 <script src="config.js"></script>
+
 <script>
-const db=supabase.createClient(window.SUPABASE_URL,window.SUPABASE_PUBLISHABLE_KEY);
-let lastScanId=null;
-async function poll(){
- const {data,error}=await db.from("scan_history").select("id,scanned_at,participants(*)").order("id",{ascending:false}).limit(1).single();
- if(error||!data||data.id===lastScanId)return;
- lastScanId=data.id;
- const p=data.participants;if(!p)return;
- document.getElementById("photo").src=p.photo_url||"";
- document.getElementById("name").textContent=p.name;
- document.getElementById("info").textContent=[p.position,p.organization].filter(Boolean).join(" • ")||"Registered Participant";
- document.getElementById("message").textContent=p.message||"";
+const db = supabase.createClient(
+  window.SUPABASE_URL,
+  window.SUPABASE_PUBLISHABLE_KEY
+);
+
+let lastScanId = null;
+
+/* =====================================================
+   TEXT TO SPEECH
+===================================================== */
+
+const ttsSupported =
+  "speechSynthesis" in window;
+
+let ttsEnabled = false;
+let voices = [];
+
+function loadVoices(){
+  if(!ttsSupported) return;
+
+  voices = speechSynthesis.getVoices() || [];
+
+  const select =
+    document.getElementById("ttsVoice");
+
+  select.innerHTML =
+    '<option value="">Default voice</option>';
+
+  voices.forEach((voice,index)=>{
+    const option =
+      document.createElement("option");
+
+    option.value = index;
+
+    option.textContent =
+      voice.name + " — " + voice.lang;
+
+    select.appendChild(option);
+  });
 }
-poll();setInterval(poll,1000);
+
+if(ttsSupported){
+  speechSynthesis.onvoiceschanged =
+    loadVoices;
+
+  loadVoices();
+}
+
+
+function speakParticipant(p){
+
+  if(!ttsSupported || !ttsEnabled)
+    return;
+
+  let speech =
+    "Now welcoming " +
+    (p.name || "participant") +
+    ".";
+
+  if(p.position)
+    speech +=
+      " " + p.position + ".";
+
+  if(p.organization)
+    speech +=
+      " From " + p.organization + ".";
+
+  if(p.message)
+    speech +=
+      " " + p.message;
+
+
+  speechSynthesis.cancel();
+
+
+  const utterance =
+    new SpeechSynthesisUtterance(
+      speech
+    );
+
+
+  const voiceSelect =
+    document.getElementById(
+      "ttsVoice"
+    );
+
+
+  if(
+    voiceSelect.value !== "" &&
+    voices[
+      Number(voiceSelect.value)
+    ]
+  ){
+    utterance.voice =
+      voices[
+        Number(voiceSelect.value)
+      ];
+  }
+
+
+  utterance.rate = 1;
+  utterance.pitch = 1;
+  utterance.volume = 1;
+
+
+  speechSynthesis.speak(
+    utterance
+  );
+}
+
+
+/* Enable TTS */
+
+document.getElementById(
+  "ttsEnable"
+).addEventListener(
+  "click",
+  function(){
+
+    if(!ttsSupported){
+
+      alert(
+        "Text-to-Speech is not supported by this browser."
+      );
+
+      return;
+    }
+
+
+    ttsEnabled =
+      !ttsEnabled;
+
+
+    this.textContent =
+      ttsEnabled
+        ? "🔊 TTS ENABLED"
+        : "🔇 TTS DISABLED";
+
+
+    document.getElementById(
+      "ttsStatus"
+    ).textContent =
+      ttsEnabled
+        ? "TTS ON"
+        : "TTS OFF";
+
+
+    speechSynthesis.cancel();
+
+
+    /* This first speech is important:
+       it unlocks speech on browsers that
+       require user interaction. */
+
+    if(ttsEnabled){
+
+      const test =
+        new SpeechSynthesisUtterance(
+          "Text to speech is now enabled."
+        );
+
+      speechSynthesis.speak(
+        test
+      );
+    }
+  }
+);
+
+
+/* Test voice */
+
+document.getElementById(
+  "ttsTest"
+).addEventListener(
+  "click",
+  function(){
+
+    ttsEnabled = true;
+
+    document.getElementById(
+      "ttsEnable"
+    ).textContent =
+      "🔊 TTS ENABLED";
+
+    document.getElementById(
+      "ttsStatus"
+    ).textContent =
+      "TTS ON";
+
+
+    speakParticipant({
+
+      name:
+        "Test Participant",
+
+      position:
+        "Guest",
+
+      organization:
+        "San Miguel",
+
+      message:
+        "Welcome to the event!"
+    });
+  }
+);
+
+
+/* =====================================================
+   LED DISPLAY
+===================================================== */
+
+async function poll(){
+
+  const result =
+    await db
+      .from("scan_history")
+      .select(
+        "id,scanned_at,participants(*)"
+      )
+      .order(
+        "id",
+        {ascending:false}
+      )
+      .limit(1)
+      .single();
+
+
+  const data =
+    result.data;
+
+
+  const error =
+    result.error;
+
+
+  if(
+    error ||
+    !data ||
+    data.id === lastScanId
+  ){
+    return;
+  }
+
+
+  lastScanId =
+    data.id;
+
+
+  const p =
+    data.participants;
+
+
+  if(!p)
+    return;
+
+
+  document.getElementById(
+    "photo"
+  ).src =
+    p.photo_url || "";
+
+
+  document.getElementById(
+    "name"
+  ).textContent =
+    p.name;
+
+
+  document.getElementById(
+    "info"
+  ).textContent =
+    [
+      p.position,
+      p.organization
+    ]
+    .filter(Boolean)
+    .join(" • ")
+    ||
+    "Registered Participant";
+
+
+  document.getElementById(
+    "message"
+  ).textContent =
+    p.message || "";
+
+
+  /* Read the newly scanned participant */
+
+  if(
+    document.getElementById(
+      "ttsAuto"
+    ).checked
+  ){
+
+    speakParticipant(p);
+
+  }
+}
+
+
+poll();
+
+setInterval(
+  poll,
+  1000
+);
+
 </script>
+
 </body>
 </html>
